@@ -836,7 +836,7 @@ export default function Home() {
             <p className="mt-2">
               Built with ❤️ by{" "}
               <a
-                href="https://x.com/redouaneoachour"
+                href="https://x.com/redouane_cc"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-primary hover:underline"

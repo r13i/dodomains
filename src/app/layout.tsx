@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     description:
       "The first 100% free domain generator to use ChatGPT and other LLMs for truly creative domain suggestions with real-time availability.",
     images: ["/logo.jpeg"],
-    creator: "@redouaneoachour",
+    creator: "@redouane_cc",
   },
   robots: {
     index: true,

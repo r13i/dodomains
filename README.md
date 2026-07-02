@@ -70,7 +70,7 @@ bun dev
 
 This project is open source and available under the [MIT License](LICENSE).
 
-## 👨‍💻 Built with ❤️ by [redouane](https://x.com/redouaneoachour)
+## 👨‍💻 Built with ❤️ by [redouane](https://x.com/redouane_cc)
 
 ---
 
