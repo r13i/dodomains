@@ -25,6 +25,8 @@ import { Label } from "@/src/components/ui/label";
 import { Waves } from "@/src/components/ui/waves";
 import { cn } from "@/src/lib/utils";
 import { Testimonials } from "@/src/components/testimonials";
+import { ModelConnection } from "@/src/components/model-connection";
+import { useLlmConfig } from "@/src/hooks/use-llm-config";
 
 // Expanded TLD lists for user selection
 const POPULAR_TLDS = ["com", "net", "org", "io", "co", "app", "dev", "ai"];
@@ -84,6 +86,9 @@ export default function Home() {
   const [selectedTlds, setSelectedTlds] = useState<string[]>([]);
   const [tldCategory, setTldCategory] = useState("popular");
   const [loadingMessage, setLoadingMessage] = useState("");
+  const [connectOpen, setConnectOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const { config } = useLlmConfig();
 
   // Constants for keyword limits
   const MAX_KEYWORDS = 5;
@@ -160,8 +165,11 @@ export default function Home() {
   };
 
   const generateDomains = async () => {
+    if (!config) return;
+
     setLoading(true);
     setResults([]);
+    setErrorMessage(null);
 
     // Start the loading message animation
     let messageIndex = 0;
@@ -182,24 +190,29 @@ export default function Home() {
           domainLength: domainLength[0],
           domainStyle,
           tlds: selectedTlds,
+          llm: config,
         }),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to generate domains");
+        const data = await response.json();
+        setErrorMessage(data.error ?? "Failed to generate domains");
+        return;
       }
 
       const data = await response.json();
       setResults(data.results);
     } catch (error) {
       console.error("Error:", error);
-      // Show error message to user
+      setErrorMessage("Failed to generate domains. Please try again.");
     } finally {
       clearInterval(messageInterval);
       setLoading(false);
       setLoadingMessage("");
     }
   };
+
+  const hasInput = keywords.length > 0 || description.trim().length > 0;
 
   return (
     <main>
@@ -219,8 +232,9 @@ export default function Home() {
           />
         </div>
 
-        {/* GitHub button in top right corner */}
-        <div className="fixed top-4 right-4 z-50">
+        {/* Model connection + GitHub button in top right corner */}
+        <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
+          <ModelConnection open={connectOpen} onOpenChange={setConnectOpen} />
           <a
             href="https://github.com/r13i/dodomains"
             target="_blank"
@@ -264,7 +278,7 @@ export default function Home() {
             <div className="flex flex-wrap justify-center gap-2 text-sm text-muted-foreground backdrop-blur-[1px] bg-background/30 px-2 py-1 rounded">
               <span>100% Free to Use</span>
               <span>•</span>
-              <span>AI-Powered Suggestions</span>
+              <span>Any LLM Provider</span>
               <span>•</span>
               <span>Available Domains Only</span>
             </div>
@@ -276,8 +290,8 @@ export default function Home() {
               <CardHeader>
                 <CardTitle>Dodo-Powered Domain Name Generator 🦤</CardTitle>
                 <CardDescription>
-                  Enter keywords related to your project and our free LLM
-                  technology will generate uniquely creative, available domain
+                  Enter keywords or describe your project, and the model you
+                  connected will generate uniquely creative, available domain
                   names. Our hard-working dodo is standing by!
                 </CardDescription>
               </CardHeader>
@@ -330,9 +344,7 @@ export default function Home() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="description">
-                    Project Description (Optional)
-                  </Label>
+                  <Label htmlFor="description">Project Description</Label>
                   <Textarea
                     id="description"
                     placeholder="Briefly describe your project or website"
@@ -344,12 +356,15 @@ export default function Home() {
                   <p className="text-xs text-muted-foreground mt-1">
                     {description.length}/{MAX_DESCRIPTION_LENGTH} characters
                   </p>
+                  <p className="text-xs text-muted-foreground">
+                    Add keywords or a description — either one is enough.
+                  </p>
                 </div>
 
-                <div className="space-y-4 pt-4">
-                  <h3 className="text-sm font-medium">
+                <details open className="space-y-4 pt-4">
+                  <summary className="text-sm font-medium list-none cursor-pointer [&::-webkit-details-marker]:hidden">
                     Customize Your Domains
-                  </h3>
+                  </summary>
 
                   <div className="space-y-2">
                     <div className="flex justify-between">
@@ -529,7 +544,7 @@ export default function Home() {
                       </div>
                     )}
                   </div>
-                </div>
+                </details>
               </CardContent>
               <CardFooter className="flex flex-col gap-4">
                 <div className="w-full text-center mb-1">
@@ -538,16 +553,36 @@ export default function Home() {
                     perfect domain 🦤
                   </p>
                 </div>
+                {errorMessage && (
+                  <p className="w-full text-sm text-destructive text-center">
+                    {errorMessage}
+                  </p>
+                )}
+
                 <Button
                   className="w-full"
                   size="lg"
-                  onClick={generateDomains}
-                  disabled={loading || keywords.length === 0}
+                  variant={!config ? "outline" : "default"}
+                  onClick={() =>
+                    config ? generateDomains() : setConnectOpen(true)
+                  }
+                  disabled={loading || (Boolean(config) && !hasInput)}
                 >
-                  {loading
-                    ? "Generating Domains..."
-                    : "Generate Domain Ideas 🦤"}
+                  {!config
+                    ? "Connect a model to generate"
+                    : !hasInput
+                      ? "Add keywords or a description"
+                      : loading
+                        ? "Generating Domains..."
+                        : "Generate Domain Ideas 🦤"}
                 </Button>
+
+                {!config && (
+                  <p className="mt-2 text-center text-xs text-muted-foreground">
+                    Google, Groq and Mistral all issue a free API key in about a
+                    minute.
+                  </p>
+                )}
 
                 {loading && (
                   <div className="w-full text-center mt-2">
