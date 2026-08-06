@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import posthog from "posthog-js";
 
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
@@ -147,6 +148,11 @@ export function ModelConnection({
         return;
       }
       save(next);
+      posthog.capture("model_connection_tested", {
+        provider: next.provider,
+        model: next.model,
+        has_custom_base_url: Boolean(next.baseUrl),
+      });
       setStatus("idle");
       onOpenChange(false);
     } catch {
@@ -156,6 +162,9 @@ export function ModelConnection({
   }
 
   function clearAll() {
+    posthog.capture("model_connection_cleared", {
+      had_saved_connection: Boolean(config),
+    });
     clear();
     setProviderId("google");
     setModel(defaultModel("google"));
