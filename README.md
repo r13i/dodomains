@@ -20,7 +20,7 @@ dodomains also speaks [MCP](https://modelcontextprotocol.io), so your AI agent c
   ```bash
   claude mcp add --transport http dodomains https://dodomains.dev/api/mcp
   ```
-- **Claude Desktop / Cursor:**
+- **Cursor** (`.cursor/mcp.json`):
   ```json
   {
     "mcpServers": {
@@ -30,6 +30,7 @@ dodomains also speaks [MCP](https://modelcontextprotocol.io), so your AI agent c
     }
   }
   ```
+- **Claude Desktop:** Settings → Connectors → Add custom connector, name it `dodomains`, paste `https://dodomains.dev/api/mcp`. Custom connectors require a paid Claude plan.
 - **Tools:**
   - `check_domains` - Checks up to 100 domain names at once against a snapshot of registered domains
   - `score_domain` - Scores a domain 0-100 on brandability
