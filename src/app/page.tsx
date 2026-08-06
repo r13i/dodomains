@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import posthog from "posthog-js";
 import {
   Card,
   CardContent,
@@ -187,6 +188,15 @@ export default function Home() {
   const generateDomains = async () => {
     if (!config) return;
 
+    posthog.capture("domain_generation_requested", {
+      provider: config.provider,
+      model: config.model,
+      keyword_count: keywords.length,
+      has_description: Boolean(description.trim()),
+      advanced_customization_enabled: advancedOpen,
+      selected_tld_count: advancedOpen ? selectedTlds.length : 0,
+    });
+
     setLoading(true);
     setResults([]);
     setErrorMessage(null);
@@ -232,6 +242,11 @@ export default function Home() {
       }
 
       if (!response.ok) {
+        posthog.capture("domain_generation_failed", {
+          error_code: data.code ?? "request_failed",
+          provider: config.provider,
+          model: config.model,
+        });
         setErrorMessage(data.error ?? "Failed to generate domains");
         if (data.code && CONFIG_ERROR_CODES.includes(data.code)) {
           setConnectOpen(true);
@@ -239,8 +254,22 @@ export default function Home() {
         return;
       }
 
-      setResults(data.results ?? []);
+      const generatedResults = data.results ?? [];
+      posthog.capture("domain_generation_completed", {
+        provider: config.provider,
+        model: config.model,
+        suggestion_count: generatedResults.length,
+        available_suggestion_count: generatedResults.filter(
+          (domain) => domain.available,
+        ).length,
+      });
+      setResults(generatedResults);
     } catch (error) {
+      posthog.capture("domain_generation_failed", {
+        error_code: "network_error",
+        provider: config.provider,
+        model: config.model,
+      });
       console.error("Error:", error);
       setErrorMessage("Failed to generate domains. Please try again.");
     } finally {
@@ -251,6 +280,14 @@ export default function Home() {
   };
 
   const hasInput = keywords.length > 0 || description.trim().length > 0;
+
+  const openRegistrar = (
+    registrar: "godaddy" | "namecheap",
+    affiliateLink: string | undefined,
+  ) => {
+    posthog.capture("registrar_link_opened", { registrar });
+    window.open(affiliateLink, "_blank", "noopener,noreferrer");
+  };
 
   return (
     <main>
@@ -709,10 +746,9 @@ export default function Home() {
                                   )}
                                   size="sm"
                                   onClick={() =>
-                                    window.open(
+                                    openRegistrar(
+                                      "namecheap",
                                       domain.affiliateLinks?.namecheap,
-                                      "_blank",
-                                      "noopener,noreferrer",
                                     )
                                   }
                                 >
@@ -743,10 +779,9 @@ export default function Home() {
                                   )}
                                   size="sm"
                                   onClick={() =>
-                                    window.open(
+                                    openRegistrar(
+                                      "godaddy",
                                       domain.affiliateLinks?.godaddy,
-                                      "_blank",
-                                      "noopener,noreferrer",
                                     )
                                   }
                                 >
@@ -800,10 +835,9 @@ export default function Home() {
                                     )}
                                     size="sm"
                                     onClick={() =>
-                                      window.open(
+                                      openRegistrar(
+                                        "namecheap",
                                         domain.affiliateLinks?.namecheap,
-                                        "_blank",
-                                        "noopener,noreferrer",
                                       )
                                     }
                                   >
@@ -834,10 +868,9 @@ export default function Home() {
                                     )}
                                     size="sm"
                                     onClick={() =>
-                                      window.open(
+                                      openRegistrar(
+                                        "godaddy",
                                         domain.affiliateLinks?.godaddy,
-                                        "_blank",
-                                        "noopener,noreferrer",
                                       )
                                     }
                                   >
