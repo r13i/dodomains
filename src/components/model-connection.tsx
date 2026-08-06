@@ -232,7 +232,7 @@ export function ModelConnection({
                   rel="noopener noreferrer"
                   className="mt-1 w-fit text-xs font-medium text-blue-600 underline underline-offset-2 hover:text-blue-700"
                 >
-                  Compare model prices ↗
+                  Compare models ↗
                 </a>
               </div>
 

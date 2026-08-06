@@ -276,7 +276,7 @@ export default function Home() {
             rel="noopener noreferrer"
             className="text-sm font-medium text-foreground underline underline-offset-4 hover:no-underline"
           >
-            Compare prices ↗
+            Compare models ↗
           </a>
           <ModelConnection
             open={connectOpen}
