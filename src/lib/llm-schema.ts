@@ -13,7 +13,6 @@ export const llmSchema = z
     model: z.string().min(1).max(100),
     apiKey: z.string().min(1).max(500),
     baseUrl: z
-      .string()
       .url()
       .max(300)
       .refine(
@@ -24,15 +23,15 @@ export const llmSchema = z
             return false;
           }
         },
-        { message: "Base URL must use http or https" },
+        { error: "Base URL must use http or https" },
       )
       .optional(),
   })
   .refine((l) => Boolean(getProvider(l.provider)), {
-    message: "Unknown provider",
+    error: "Unknown provider",
     path: ["provider"],
   })
   .refine((l) => !getProvider(l.provider)?.needsBaseUrl || Boolean(l.baseUrl), {
-    message: "A base URL is required for a custom provider",
+    error: "A base URL is required for a custom provider",
     path: ["baseUrl"],
   });

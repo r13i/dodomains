@@ -24,7 +24,7 @@ const generateRequestSchema = z
   .refine(
     (d) => d.keywords.length > 0 || (d.description ?? "").trim().length > 0,
     {
-      message: "Provide keywords or a description",
+      error: "Provide keywords or a description",
       path: ["keywords"],
     },
   );
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
 
   if (!parsed.success) {
     return NextResponse.json(
-      { error: "Invalid request data", details: parsed.error.format() },
+      { error: "Invalid request data", details: z.treeifyError(parsed.error) },
       { status: 400 },
     );
   }
