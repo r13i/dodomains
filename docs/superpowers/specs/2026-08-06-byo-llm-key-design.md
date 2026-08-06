@@ -22,16 +22,16 @@ This design removes the operator's LLM cost entirely. The visitor connects their
 
 ## 2. Decisions
 
-| Aspect | Decision |
-|---|---|
-| Key storage | Browser `localStorage`, key `dodomains.llm.v1`. |
-| Transport | **Server proxy.** The key is sent with each request, used in memory, never persisted or logged server-side. |
-| Provider coverage | Curated list of eight, plus a Custom OpenAI-compatible row. |
-| Multi-provider layer | **Vercel AI SDK** (`ai` + per-provider `@ai-sdk/*` packages), `generateObject` with a zod schema. |
-| No-key visitor | **Hard gate.** No key means no generation. The UI leads with providers that issue a free key. |
-| Model selection | Combobox: seeded list with prices, free text always accepted. |
-| Observability | `langfuse` removed. Tracing prompts that run on a visitor's own key is not a claim we want to make. |
-| Tests | Vitest, unit only. |
+| Aspect               | Decision                                                                                                    |
+| -------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Key storage          | Browser `localStorage`, key `dodomains.llm.v1`.                                                             |
+| Transport            | **Server proxy.** The key is sent with each request, used in memory, never persisted or logged server-side. |
+| Provider coverage    | Curated list of eight, plus a Custom OpenAI-compatible row.                                                 |
+| Multi-provider layer | **Vercel AI SDK v7** (`ai@^7` + `@ai-sdk/*@^4`), `generateText` with `Output.object` and a zod schema.      |
+| No-key visitor       | **Hard gate.** No key means no generation. The UI leads with providers that issue a free key.               |
+| Model selection      | Combobox: seeded list with prices, free text always accepted.                                               |
+| Observability        | `langfuse` removed. Tracing prompts that run on a visitor's own key is not a claim we want to make.         |
+| Tests                | Vitest, unit only.                                                                                          |
 
 ### Why server proxy and not browser-direct
 
@@ -66,12 +66,12 @@ src/app/api/test-connection/route.ts  one cheap call to validate key + model
 export type ProviderMeta = {
   id: string;
   label: string;
-  free: boolean;          // issues a usable free API key
-  keyPrefix: string;      // "" when the provider has no stable prefix
-  keyHost: string;        // where to get a key, e.g. "console.groq.com"
-  gateway: boolean;       // namespaces model ids itself (Groq, OpenRouter)
-  needsBaseUrl: boolean;  // custom only
-  models: Array<{ id: string; in: number; out: number }>;  // USD per MTok
+  free: boolean; // issues a usable free API key
+  keyPrefix: string; // "" when the provider has no stable prefix
+  keyHost: string; // where to get a key, e.g. "console.groq.com"
+  gateway: boolean; // namespaces model ids itself (Groq, OpenRouter)
+  needsBaseUrl: boolean; // custom only
+  models: Array<{ id: string; in: number; out: number }>; // USD per MTok
 };
 ```
 
@@ -83,17 +83,17 @@ export type ProviderMeta = {
 
 Free-key providers are listed first, and the field shows an **"Allows free API key"** badge.
 
-| id | Label | Free key | Key prefix | Gateway |
-|---|---|---|---|---|
-| `google` | Google Gemini | yes | `AIza` | no |
-| `groq` | Groq | yes | `gsk_` | **yes** |
-| `mistral` | Mistral | yes | — | no |
-| `openrouter` | OpenRouter | yes | `sk-or-` | **yes** |
-| `openai` | OpenAI | no | `sk-` | no |
-| `anthropic` | Anthropic | no | `sk-ant-` | no |
-| `deepseek` | DeepSeek | no | `sk-` | no |
-| `xai` | xAI Grok | no | `xai-` | no |
-| `custom` | Custom (OpenAI-compatible) | no | — | no |
+| id           | Label                      | Free key | Key prefix | Gateway |
+| ------------ | -------------------------- | -------- | ---------- | ------- |
+| `google`     | Google Gemini              | yes      | `AIza`     | no      |
+| `groq`       | Groq                       | yes      | `gsk_`     | **yes** |
+| `mistral`    | Mistral                    | yes      | —          | no      |
+| `openrouter` | OpenRouter                 | yes      | `sk-or-`   | **yes** |
+| `openai`     | OpenAI                     | no       | `sk-`      | no      |
+| `anthropic`  | Anthropic                  | no       | `sk-ant-`  | no      |
+| `deepseek`   | DeepSeek                   | no       | `sk-`      | no      |
+| `xai`        | xAI Grok                   | no       | `xai-`     | no      |
+| `custom`     | Custom (OpenAI-compatible) | no       | —          | no      |
 
 ### 3.3 Model list
 
@@ -101,7 +101,7 @@ Seeded from **https://hail.so/costs.md**, which gives canonical model ids with i
 
 Defaults: `gemini-2.5-flash`, `mistral-small-2603`, `gpt-5-nano`, `claude-sonnet-5`, `deepseek-chat`, `grok-code-fast-1`.
 
-**Gateways are seeded thinly on purpose.** `hail.so/costs.md` lists vendor-canonical names (`llama-4-scout`), but Groq and OpenRouter namespace their own (`meta-llama/llama-4-scout-17b-16e-instruct`). Seeding those from hail would hand users ids that 404. For `gateway: true` providers the hint reads *"Groq uses its own model ids. Copy the exact id from console.groq.com."*
+**Gateways are seeded thinly on purpose.** `hail.so/costs.md` lists vendor-canonical names (`llama-4-scout`), but Groq and OpenRouter namespace their own (`meta-llama/llama-4-scout-17b-16e-instruct`). Seeding those from hail would hand users ids that 404. For `gateway: true` providers the hint reads _"Groq uses its own model ids. Copy the exact id from console.groq.com."_
 
 The field is always free text, so a model released today works today.
 
@@ -122,26 +122,61 @@ llm: {
 
 ### 3.5 Structured output
 
-`generateObject({ model, schema, prompt })` against:
+```ts
+import { generateText, Output } from "ai";
+
+const { output } = await generateText({
+  model,
+  output: Output.object({ schema: domainSuggestionSchema }),
+  instructions: SYSTEM_PROMPT,
+  prompt: buildPrompt(params),
+});
+```
+
+against:
 
 ```ts
-z.object({ domains: z.array(z.object({ name: z.string(), tld: z.string() })).min(5).max(10) })
+z.object({
+  domains: z
+    .array(z.object({ name: z.string(), tld: z.string() }))
+    .min(5)
+    .max(10),
+});
 ```
 
 The AI SDK selects the right mechanism per provider (OpenAI `json_schema`, Anthropic forced tool call, Gemini `responseSchema`). This replaces `JSON.parse(response.choices[0].message.content || "{}")`, which today yields `{}` on a malformed reply and then throws inside `checkDomainAvailability`.
+
+**Why not `generateObject`.** It is `@deprecated` in v7 in favour of `generateText` with an `output` setting. Note the result is on `.output`, not `.object`.
+
+### 3.5.1 Version facts that constrain the implementation
+
+Verified against the installed v7 tree, not from documentation:
+
+| Fact                                                                                    | Consequence                                                                                                                |
+| --------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `ai@7` declares `engines.node >= 22` and is ESM-only                                    | Add `"engines": { "node": ">=22" }`; the Vercel project must not run Node 20.                                              |
+| `ai@7` peer-requires `zod@^3.25.76 \|\| ^4.1.8`                                         | The repo's `zod@^3.24.2` is **below the floor**. Bump to `^3.25.76` — stays on zod 3, no schema rewrites.                  |
+| `system` is deprecated in favour of `instructions`                                      | Use `instructions`.                                                                                                        |
+| `@ai-sdk/google` exports `createGoogle`; `createGoogleGenerativeAI` is a retained alias | Use `createGoogle`.                                                                                                        |
+| `createOpenAI(...)(id)` targets the **Responses** API                                   | Use `.chat(id)` — Chat Completions is available on every OpenAI account tier, which matters when the key is the visitor's. |
+| `@ai-sdk/openai-compatible` requires both `name` and `baseURL`                          | The `custom` factory must pass both.                                                                                       |
+| A retryable `APICallError` surfaces wrapped in `RetryError`                             | The error mapper must unwrap `RetryError.errors[]` before reading `.statusCode`.                                           |
+| Mock class is `MockLanguageModelV4` (V2 is gone)                                        | Tests use `MockLanguageModelV4` from `ai/test`.                                                                            |
+| Provider-level `finishReason` is `{ unified, raw }` and `usage` is nested               | Test fixtures must use the object forms. A bare `'stop'` string does not throw — it silently yields `undefined`.           |
+| `ai/test` no longer needs `msw`                                                         | Do not add `msw`.                                                                                                          |
 
 ### 3.6 Error mapping
 
 Provider failures map to a code plus a sanitized message. Raw provider bodies never reach the client — they can carry organization identifiers.
 
-| Condition | Code | UI response |
-|---|---|---|
-| 401 / 403 | `invalid_key` | Open dropdown, focus key field |
-| unknown model | `bad_model` | Open dropdown, focus model field |
-| quota exhausted / 402 | `no_credit` | Offer switching to a free provider |
-| 429 | `rate_limited` | Retry, key untouched |
-| DNS / bad base URL | `provider_unreachable` | Open dropdown, focus base URL |
-| anything else | `provider_error` | Generic message |
+| Condition             | Code                   | UI response                        |
+| --------------------- | ---------------------- | ---------------------------------- |
+| 401 / 403             | `invalid_key`          | Open dropdown, focus key field     |
+| unknown model         | `bad_model`            | Open dropdown, focus model field   |
+| quota exhausted / 402 | `no_credit`            | Offer switching to a free provider |
+| 429                   | `rate_limited`         | Retry, key untouched               |
+| DNS / bad base URL    | `provider_unreachable` | Open dropdown, focus base URL      |
+| anything else         | `provider_error`       | Generic message                    |
 
 ### 3.7 Availability check
 
@@ -161,12 +196,12 @@ Mockup: `docs/superpowers/specs/assets/2026-08-06-byo-key-mockup.html`
 
 The fixed top-right cluster in `src/app/page.tsx` currently holds one GitHub link. A model button joins it, styled identically (`bg-background/80 backdrop-blur-sm border-2 border-border/70 rounded-md px-3 py-1.5 text-sm`).
 
-| State | Content |
-|---|---|
-| Unset | grey dot · `Connect model` |
+| State     | Content                                    |
+| --------- | ------------------------------------------ |
+| Unset     | grey dot · `Connect model`                 |
 | Connected | teal dot · `OpenAI` · `gpt-5-mini` in mono |
-| Testing | pulsing dot · `Testing…` |
-| Failed | red dot · `Key rejected` |
+| Testing   | pulsing dot · `Testing…`                   |
+| Failed    | red dot · `Key rejected`                   |
 
 Below `38rem` the model id is hidden and the label truncates.
 
@@ -188,7 +223,7 @@ Anchored under the button, `24rem` wide, full-width minus gutters below `30rem`.
 ### 4.3 Key field behavior
 
 - **Paste hygiene:** whitespace and stray quotes are stripped on input. This is the most common cause of a "wrong key" that is actually a correct key.
-- **Format check:** compared against `keyPrefix`; a mismatch shows *"Anthropic keys start with `sk-ant-`. Check you copied all of it."* It is a hint, never a block.
+- **Format check:** compared against `keyPrefix`; a mismatch shows _"Anthropic keys start with `sk-ant-`. Check you copied all of it."_ It is a hint, never a block.
 - **Never prefilled** from a previous provider's key.
 
 ### 4.4 Save and test
@@ -197,19 +232,19 @@ Anchored under the button, `24rem` wide, full-width minus gutters below `30rem`.
 
 ### 4.5 Generator form
 
-- `Project Description (Optional)` becomes `Project Description`, with the line *"Add keywords or a description — either one is enough."*
+- `Project Description (Optional)` becomes `Project Description`, with the line _"Add keywords or a description — either one is enough."_
 - `Customize Your Domains` becomes a `<details open>`. Same heading, same contents, same order — domain length, domain style, extension tabs.
 - Generate button states: no key → `Connect a model to generate` (outline, opens the dropdown); key but no input → `Add keywords or a description` (disabled); ready → `Generate Domain Names`.
-- Under the gated button: *"Google, Groq and Mistral all issue a free API key in about a minute."*
+- Under the gated button: _"Google, Groq and Mistral all issue a free API key in about a minute."_
 
 ### 4.6 Copy changes forced by BYO key
 
-| Location | Change |
-|---|---|
-| `page.tsx` card description | Drop *"our free LLM technology"* — it is the visitor's model now. |
-| `page.tsx` bullets | `AI-Powered Suggestions` → `Any LLM Provider` |
-| `layout.tsx` metadata | Add "bring your own API key" to the description. Keep the ChatGPT and LLM keywords — still accurate and still the traffic source. |
-| `README.md` | Document the BYO-key setup; remove `OPENAI_API_KEY` from prerequisites. |
+| Location                    | Change                                                                                                                            |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `page.tsx` card description | Drop _"our free LLM technology"_ — it is the visitor's model now.                                                                 |
+| `page.tsx` bullets          | `AI-Powered Suggestions` → `Any LLM Provider`                                                                                     |
+| `layout.tsx` metadata       | Add "bring your own API key" to the description. Keep the ChatGPT and LLM keywords — still accurate and still the traffic source. |
+| `README.md`                 | Document the BYO-key setup; remove `OPENAI_API_KEY` from prerequisites.                                                           |
 
 `100% Free to Use` stays. The tool is free.
 
@@ -234,35 +269,39 @@ The `.min(1)` constraint on `keywords` is removed; `.max(5)` and the per-keyword
 
 Vitest, unit only. No browser tests, no E2E, no real provider calls.
 
-| Target | Assertions |
-|---|---|
-| Registry | Every metadata id has a factory and vice versa; ids unique; no empty seeded model ids. |
-| `buildPrompt` | Four branches: user-selected TLDs, model-picks-TLDs, keywords only, description only. |
-| `generateDomains` | Runs against the AI SDK's `MockLanguageModelV2`. No network, no key. |
-| Error mapping | Table-driven: provider error shape → one of the six codes. |
+| Target              | Assertions                                                                                                                           |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Registry            | Every metadata id has a factory and vice versa; ids unique; no empty seeded model ids.                                               |
+| `buildPrompt`       | Four branches: user-selected TLDs, model-picks-TLDs, keywords only, description only.                                                |
+| `generateDomains`   | Runs against the AI SDK's `MockLanguageModelV4`. No network, no key.                                                                 |
+| Error mapping       | Table-driven: provider error shape → one of the six codes.                                                                           |
 | `checkAvailability` | Mocked `pg` pool: registered vs not, case-insensitive match, affiliate links only when available, DB error → all reported available. |
-| Request schema | Neither keywords nor description → 400; keywords only → ok; description only → ok; both → ok. |
-| `/api/generate` | A body with no `llm` returns 400 and never constructs a provider. |
+| Request schema      | Neither keywords nor description → 400; keywords only → ok; description only → ok; both → ok.                                        |
+| `/api/generate`     | A body with no `llm` returns 400 and never constructs a provider.                                                                    |
 
 ---
 
 ## 7. Files touched
 
 **Added**
+
 - `src/lib/providers.ts`, `src/lib/providers.server.ts`
 - `src/lib/generate.ts`, `src/lib/domains.ts`
 - `src/app/api/test-connection/route.ts`
 - `src/components/model-connection.tsx` — the button and dropdown
 - `src/hooks/use-llm-config.ts` — read/write `localStorage`, guard against a bad stored shape
-- `vitest.config.ts` and `src/**/*.test.ts`
+- `src/lib/llm-errors.ts` — provider error → code mapping
+- `vitest.config.mts` and `src/**/*.test.ts` (`.mts`, because the repo has no `"type": "module"`)
 
 **Modified**
+
 - `src/app/api/generate/route.ts` — thin glue, new schema, error mapping
 - `src/app/page.tsx` — model button, Advanced collapse, validation, copy
 - `src/app/layout.tsx` — metadata description
 - `README.md`, `package.json`
 
 **Deleted**
+
 - `openai` and `langfuse` dependencies
 - `OPENAI_API_KEY`, `OPENAI_API_MODEL`, `LANGFUSE_*` env vars, in code and in Vercel
 
