@@ -153,8 +153,9 @@ export function ModelConnection({ open, onOpenChange }: ModelConnectionProps) {
     setError(null);
   }
 
-  const dot =
-    status === "testing"
+  const dot = !ready
+    ? "bg-muted-foreground"
+    : status === "testing"
       ? "bg-muted-foreground animate-pulse"
       : status === "failed"
         ? "bg-destructive"
@@ -162,8 +163,9 @@ export function ModelConnection({ open, onOpenChange }: ModelConnectionProps) {
           ? "bg-chart-2"
           : "bg-muted-foreground";
 
-  const triggerLabel =
-    status === "testing"
+  const triggerLabel = !ready
+    ? "Model"
+    : status === "testing"
       ? "Testing…"
       : status === "failed"
         ? "Key rejected"
@@ -179,11 +181,12 @@ export function ModelConnection({ open, onOpenChange }: ModelConnectionProps) {
         onClick={() => onOpenChange(!open)}
         aria-haspopup="dialog"
         aria-expanded={open}
-        className="inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-md bg-background/80 hover:bg-background/90 transition-colors backdrop-blur-sm border-2 border-border/70"
+        disabled={!ready}
+        className="inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-md bg-background/80 hover:bg-background/90 transition-colors backdrop-blur-sm border-2 border-border/70 disabled:opacity-60 disabled:cursor-not-allowed"
       >
         <span className={cn("h-2 w-2 shrink-0 rounded-full", dot)} />
         <span className="max-w-32 truncate">{triggerLabel}</span>
-        {config && status === "idle" ? (
+        {ready && config && status === "idle" ? (
           <span className="hidden sm:inline font-mono text-xs text-muted-foreground max-w-32 truncate">
             {config.model}
           </span>

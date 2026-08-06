@@ -88,7 +88,7 @@ export default function Home() {
   const [loadingMessage, setLoadingMessage] = useState("");
   const [connectOpen, setConnectOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const { config } = useLlmConfig();
+  const { config, ready } = useLlmConfig();
 
   // Constants for keyword limits
   const MAX_KEYWORDS = 5;
@@ -562,22 +562,24 @@ export default function Home() {
                 <Button
                   className="w-full"
                   size="lg"
-                  variant={!config ? "outline" : "default"}
+                  variant={ready && !config ? "outline" : "default"}
                   onClick={() =>
                     config ? generateDomains() : setConnectOpen(true)
                   }
-                  disabled={loading || (Boolean(config) && !hasInput)}
+                  disabled={!ready || loading || (Boolean(config) && !hasInput)}
                 >
-                  {!config
-                    ? "Connect a model to generate"
-                    : !hasInput
-                      ? "Add keywords or a description"
-                      : loading
-                        ? "Generating Domains..."
-                        : "Generate Domain Ideas 🦤"}
+                  {!ready
+                    ? "Generate Domain Ideas 🦤"
+                    : !config
+                      ? "Connect a model to generate"
+                      : !hasInput
+                        ? "Add keywords or a description"
+                        : loading
+                          ? "Generating Domains..."
+                          : "Generate Domain Ideas 🦤"}
                 </Button>
 
-                {!config && (
+                {ready && !config && (
                   <p className="mt-2 text-center text-xs text-muted-foreground">
                     Google, Groq and Mistral all issue a free API key in about a
                     minute.
