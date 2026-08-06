@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -280,6 +281,12 @@ export default function Home() {
           >
             Compare models ↗
           </a>
+          <Link
+            href="/mcp"
+            className="inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-md bg-background/80 hover:bg-background/90 transition-colors backdrop-blur-sm border-2 border-border/70"
+          >
+            Prefer MCP?
+          </Link>
           <ModelConnection
             open={connectOpen}
             onOpenChange={setConnectOpen}
@@ -934,6 +941,14 @@ export default function Home() {
                 <span>
                   Highly creative domain suggestions beyond traditional
                   generators
+                </span>
+              </li>
+              <li className="flex gap-2 items-start backdrop-blur-[1px] bg-background/30 p-2 rounded">
+                <span className="text-primary">✓</span>
+                <span>
+                  Works inside your AI agent too — connect the MCP server and
+                  Claude or Cursor can check availability without leaving the
+                  chat
                 </span>
               </li>
             </ul>
