@@ -146,7 +146,7 @@ describe("POST /api/generate", () => {
   });
 
   it("never echoes the api key in a response", async () => {
-    generateDomains.mockRejectedValue(new Error("boom"));
+    generateDomains.mockRejectedValue(new Error("auth failed for key sk-test"));
     const res = await POST(
       body({
         keywords: ["tattoo"],
