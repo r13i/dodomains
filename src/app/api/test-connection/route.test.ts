@@ -34,10 +34,10 @@ describe("POST /api/test-connection", () => {
     await expect(res.json()).resolves.toEqual({ ok: true });
   });
 
-  it("asks for a single output token", async () => {
+  it("asks for 16 output tokens", async () => {
     await POST(body(llm));
     expect(generateText).toHaveBeenCalledWith(
-      expect.objectContaining({ maxOutputTokens: 1 }),
+      expect.objectContaining({ maxOutputTokens: 16 }),
     );
   });
 

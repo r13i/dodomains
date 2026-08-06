@@ -26,8 +26,11 @@ export async function POST(request: Request) {
 
   try {
     const model = resolveModel(llm);
-    // One token. Enough to prove the key and the model id, costs a fraction of a cent.
-    await generateText({ model, prompt: "ok", maxOutputTokens: 1 });
+    // 16 tokens: enough to prove the key and the model id, and the minimum
+    // OpenAI accepts for max_completion_tokens on reasoning models. A lower
+    // value 400s on those models even with a valid key, so don't "optimise"
+    // this back down. Still a fraction of a cent.
+    await generateText({ model, prompt: "ok", maxOutputTokens: 16 });
     return NextResponse.json({ ok: true });
   } catch (error) {
     const mapped = mapProviderError(error, providerLabel, llm.model);

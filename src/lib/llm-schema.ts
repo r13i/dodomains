@@ -12,7 +12,21 @@ export const llmSchema = z
     provider: z.string().min(1),
     model: z.string().min(1).max(100),
     apiKey: z.string().min(1).max(500),
-    baseUrl: z.string().url().max(300).optional(),
+    baseUrl: z
+      .string()
+      .url()
+      .max(300)
+      .refine(
+        (u) => {
+          try {
+            return ["http:", "https:"].includes(new URL(u).protocol);
+          } catch {
+            return false;
+          }
+        },
+        { message: "Base URL must use http or https" },
+      )
+      .optional(),
   })
   .refine((l) => Boolean(getProvider(l.provider)), {
     message: "Unknown provider",

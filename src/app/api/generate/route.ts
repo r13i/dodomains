@@ -8,6 +8,8 @@ import { mapProviderError } from "@/src/lib/llm-errors";
 import { getProvider } from "@/src/lib/providers";
 import { resolveModel } from "@/src/lib/providers.server";
 
+export const maxDuration = 60;
+
 const generateRequestSchema = z
   .object({
     keywords: z.array(z.string().max(30)).max(5).default([]),

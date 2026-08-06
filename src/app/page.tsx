@@ -57,6 +57,13 @@ const REGISTRAR_COLORS = {
   },
 };
 
+const CONFIG_ERROR_CODES = [
+  "invalid_key",
+  "bad_model",
+  "no_credit",
+  "provider_unreachable",
+];
+
 const DOMAIN_STYLES = [
   { id: "short", label: "Short & Simple" },
   { id: "brandable", label: "Brandable" },
@@ -88,7 +95,7 @@ export default function Home() {
   const [loadingMessage, setLoadingMessage] = useState("");
   const [connectOpen, setConnectOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const { config, ready } = useLlmConfig();
+  const { config, ready, save, clear } = useLlmConfig();
 
   // Constants for keyword limits
   const MAX_KEYWORDS = 5;
@@ -194,14 +201,25 @@ export default function Home() {
         }),
       });
 
+      let data: { results?: typeof results; error?: string; code?: string } =
+        {};
+      try {
+        data = await response.json();
+      } catch {
+        data = {
+          error: "The request timed out. Try a faster model, or try again.",
+        };
+      }
+
       if (!response.ok) {
-        const data = await response.json();
         setErrorMessage(data.error ?? "Failed to generate domains");
+        if (data.code && CONFIG_ERROR_CODES.includes(data.code)) {
+          setConnectOpen(true);
+        }
         return;
       }
 
-      const data = await response.json();
-      setResults(data.results);
+      setResults(data.results ?? []);
     } catch (error) {
       console.error("Error:", error);
       setErrorMessage("Failed to generate domains. Please try again.");
@@ -234,7 +252,14 @@ export default function Home() {
 
         {/* Model connection + GitHub button in top right corner */}
         <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
-          <ModelConnection open={connectOpen} onOpenChange={setConnectOpen} />
+          <ModelConnection
+            open={connectOpen}
+            onOpenChange={setConnectOpen}
+            config={config}
+            ready={ready}
+            save={save}
+            clear={clear}
+          />
           <a
             href="https://github.com/r13i/dodomains"
             target="_blank"

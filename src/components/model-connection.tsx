@@ -13,22 +13,31 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/src/components/ui/select";
-import { useLlmConfig, type LlmConfig } from "@/src/hooks/use-llm-config";
+import type { LlmConfig } from "@/src/hooks/use-llm-config";
 import { PROVIDERS, defaultModel, getProvider } from "@/src/lib/providers";
 import { cn } from "@/src/lib/utils";
 
 export type ModelConnectionProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  config: LlmConfig | null;
+  ready: boolean;
+  save: (c: LlmConfig) => void;
+  clear: () => void;
 };
 
 type Status = "idle" | "testing" | "failed";
 
-export function ModelConnection({ open, onOpenChange }: ModelConnectionProps) {
-  const { config, save, clear, ready } = useLlmConfig();
-
-  const [providerId, setProviderId] = useState("openai");
-  const [model, setModel] = useState(defaultModel("openai"));
+export function ModelConnection({
+  open,
+  onOpenChange,
+  config,
+  ready,
+  save,
+  clear,
+}: ModelConnectionProps) {
+  const [providerId, setProviderId] = useState("google");
+  const [model, setModel] = useState(defaultModel("google"));
   const [apiKey, setApiKey] = useState("");
   const [baseUrl, setBaseUrl] = useState("");
   const [revealed, setRevealed] = useState(false);
@@ -44,8 +53,8 @@ export function ModelConnection({ open, onOpenChange }: ModelConnectionProps) {
   // abandoned edits from a previous open don't linger.
   useEffect(() => {
     if (!open || !ready) return;
-    setProviderId(config?.provider ?? "openai");
-    setModel(config?.model ?? defaultModel("openai"));
+    setProviderId(config?.provider ?? "google");
+    setModel(config?.model ?? defaultModel("google"));
     setApiKey(config?.apiKey ?? "");
     setBaseUrl(config?.baseUrl ?? "");
     setError(null);
@@ -148,7 +157,10 @@ export function ModelConnection({ open, onOpenChange }: ModelConnectionProps) {
 
   function clearAll() {
     clear();
+    setProviderId("google");
+    setModel(defaultModel("google"));
     setApiKey("");
+    setBaseUrl("");
     setStatus("idle");
     setError(null);
   }
