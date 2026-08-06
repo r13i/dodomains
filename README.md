@@ -7,7 +7,7 @@ The first 100% free domain name generator to use advanced LLMs for highly creati
 ## ✨ Features
 
 - **100% Free to Use** - No hidden costs or premium features
-- **AI-Powered Suggestions** - Using advanced LLMs for creative domain names
+- **Bring Your Own Key** - Works with OpenAI, Anthropic, Google, Groq, Mistral, DeepSeek, xAI, OpenRouter, or any OpenAI-compatible endpoint
 - **Available Domains Only** - Verified against existing domain records
 - **Highly Creative Suggestions** - Beyond traditional domain generators
 
@@ -15,7 +15,7 @@ The first 100% free domain name generator to use advanced LLMs for highly creati
 
 ### Prerequisites
 
-- Node.js 18.x or later
+- Node.js 22.x or later
 - npm, yarn, pnpm, or bun
 
 ### Installation
@@ -53,10 +53,17 @@ bun dev
 
 4. Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+### Environment
+
+No LLM key is needed to run the app — visitors bring their own and it never touches the server. The only variables the server needs are:
+
+- `DATABASE_URL` - Postgres connection string
+- `NEXT_PUBLIC_POSTHOG_KEY` - PostHog project API key
+
 ## 🛠️ How It Works
 
 1. **Enter Your Keywords** - Provide keywords and a brief description of your project
-2. **LLM-Powered Generation** - Our LLM technology creates uniquely creative and brandable domain suggestions
+2. **Bring Your Own Key** - Paste an API key for the model you connect (OpenAI, Anthropic, Google, Groq, Mistral, DeepSeek, xAI, OpenRouter, or any OpenAI-compatible endpoint) and it generates the domain suggestions
 3. **Availability Check** - We verify domain availability in real-time so you only see domains you can register
 
 ## 🧩 Tech Stack

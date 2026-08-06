@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "dodomains | Free LLM-Powered Domain Name Generator",
   description:
-    "The first 100% free domain generator to use ChatGPT and other large language models to create highly creative and available domain names for your project.",
+    "The first 100% free domain generator to use ChatGPT and other large language models to create highly creative and available domain names for your project. Bring your own API key.",
   keywords: [
     "free domain generator",
     "LLM domain generator",
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "dodomains | Free LLM-Powered Domain Name Generator",
     description:
-      "The first 100% free domain generator to use ChatGPT and other large language models to create highly creative and available domain names for your project.",
+      "The first 100% free domain generator to use ChatGPT and other large language models to create highly creative and available domain names for your project. Bring your own API key.",
     url: "https://dodomains.dev",
     siteName: "dodomains",
     images: [
