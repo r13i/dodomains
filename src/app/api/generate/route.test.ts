@@ -71,6 +71,15 @@ describe("POST /api/generate", () => {
     expect(res.status).toBe(200);
   });
 
+  it("accepts a request with no domainLength, domainStyle or tlds", async () => {
+    const res = await POST(body({ keywords: ["tattoo"], llm }));
+    expect(res.status).toBe(200);
+    expect(generateDomains).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.not.objectContaining({ domainStyle: expect.anything() }),
+    );
+  });
+
   it("accepts a description with no keywords", async () => {
     const res = await POST(
       body({

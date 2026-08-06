@@ -14,8 +14,10 @@ const generateRequestSchema = z
   .object({
     keywords: z.array(z.string().max(30)).max(5).default([]),
     description: z.string().max(300).optional(),
-    domainLength: z.number().min(3).max(20),
-    domainStyle: z.string().min(1),
+    // Optional: the client omits these when the Customize section is
+    // collapsed, so the model chooses length, style and TLDs itself.
+    domainLength: z.number().min(3).max(20).optional(),
+    domainStyle: z.string().min(1).optional(),
     tlds: z.array(z.string()).optional(),
     llm: llmSchema,
   })

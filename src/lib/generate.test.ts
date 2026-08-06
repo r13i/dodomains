@@ -56,6 +56,35 @@ describe("buildPrompt", () => {
     expect(p).not.toContain("design");
   });
 
+  it("omits the length and style lines when neither is supplied", () => {
+    const p = buildPrompt({ keywords: ["tattoo"] });
+    expect(p).not.toContain("Preferred Domain Length");
+    expect(p).not.toContain("Domain Style:");
+    expect(p).not.toContain("Match the requested style");
+    expect(p).not.toContain("characters long");
+    // The requirement list must stay contiguously numbered.
+    expect(p).toContain("1. Are creative and memorable");
+    expect(p).toContain("2. Reflect the keywords and project description");
+    expect(p).toContain("3. Would likely be available");
+    expect(p).toContain("4. Each suggestion should include");
+  });
+
+  it("still numbers the requirements contiguously with both supplied", () => {
+    const p = buildPrompt(base);
+    expect(p).toContain("3. Match the requested style (balanced)");
+    expect(p).toContain("4. Are approximately 10 characters long");
+    expect(p).toContain("5. Would likely be available");
+    expect(p).toContain("6. Each suggestion should include");
+  });
+
+  it("keeps one line when only the style is supplied", () => {
+    const p = buildPrompt({ keywords: ["tattoo"], domainStyle: "funny" });
+    expect(p).toContain("Domain Style: funny");
+    expect(p).not.toContain("Preferred Domain Length");
+    expect(p).toContain("3. Match the requested style (funny)");
+    expect(p).toContain("4. Would likely be available");
+  });
+
   it("works from a description alone with no keywords", () => {
     const p = buildPrompt({
       ...base,

@@ -10,8 +10,10 @@ const CREATIVE_TLDS = ["ai", "io", "co", "me", "app", "xyz", "tech", "design"];
 export type GenerateParams = {
   keywords: string[];
   description?: string;
-  domainLength: number;
-  domainStyle: string;
+  /** Omitted when the visitor has the Customize section collapsed. */
+  domainLength?: number;
+  /** Omitted when the visitor has the Customize section collapsed. */
+  domainStyle?: string;
   tlds?: string[];
 };
 
@@ -46,23 +48,34 @@ Please choose appropriate TLDs from popular options like: ${(domainStyle ===
 Select the TLD that best fits each domain name. For professional domains, prefer .com when appropriate.
 For each suggestion, pick the TLD that enhances the domain's meaning or marketability.`;
 
+  // Length and style are omitted when the visitor has the Customize section
+  // collapsed. Constraining the model on settings it was never shown produces
+  // suggestions the visitor did not ask for.
+  const requirements = [
+    "Are creative and memorable",
+    "Reflect the keywords and project description",
+    ...(domainStyle ? [`Match the requested style (${domainStyle})`] : []),
+    ...(domainLength
+      ? [`Are approximately ${domainLength} characters long (excluding TLD)`]
+      : []),
+    "Would likely be available (not common words or very short domains)",
+    "Each suggestion should include both the domain name and an appropriate TLD",
+  ]
+    .map((line, i) => `${i + 1}. ${line}`)
+    .join("\n");
+
   return `
 Generate domain name suggestions based on the following parameters:
 
 ${keywords.length > 0 ? `Keywords: ${keywords.join(", ")}` : ""}
 ${description ? `Project Description: ${description}` : ""}
-Preferred Domain Length: ${domainLength} characters (approximately for the name part, excluding TLD)
-Domain Style: ${domainStyle}
+${domainLength ? `Preferred Domain Length: ${domainLength} characters (approximately for the name part, excluding TLD)` : ""}
+${domainStyle ? `Domain Style: ${domainStyle}` : ""}
 
 ${tldInstructions}
 
 Please provide 5-10 domain name suggestions that:
-1. Are creative and memorable
-2. Reflect the keywords and project description
-3. Match the requested style (${domainStyle})
-4. Are approximately ${domainLength} characters long (excluding TLD)
-5. Would likely be available (not common words or very short domains)
-6. Each suggestion should include both the domain name and an appropriate TLD
+${requirements}
 
 Explanation for different styles:
 - "short": Brief, concise domains that are easy to remember

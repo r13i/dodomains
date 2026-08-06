@@ -226,6 +226,14 @@ export function ModelConnection({
                   Bring a key from any provider. You pay the provider directly,
                   at their cost.
                 </p>
+                <a
+                  href="https://hail.so/costs"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-muted-foreground hover:text-foreground w-fit"
+                >
+                  Compare prices ↗
+                </a>
               </div>
 
               {error ? (
@@ -235,18 +243,25 @@ export function ModelConnection({
               ) : null}
 
               <div className="grid gap-2">
-                <div className="flex items-center justify-between gap-2">
-                  <Label htmlFor="llm-provider">Provider</Label>
-                  {meta?.free ? <Badge>Allows free API key</Badge> : null}
-                </div>
+                <Label htmlFor="llm-provider">Provider</Label>
                 <Select value={providerId} onValueChange={pickProvider}>
-                  <SelectTrigger id="llm-provider">
+                  <SelectTrigger id="llm-provider" className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {PROVIDERS.map((p) => (
                       <SelectItem key={p.id} value={p.id}>
-                        {p.label}
+                        <span className="flex items-center gap-2">
+                          {p.label}
+                          {p.free ? (
+                            <Badge
+                              variant="secondary"
+                              className="px-1.5 py-0 text-[10px] font-normal"
+                            >
+                              Allows free API key
+                            </Badge>
+                          ) : null}
+                        </span>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -254,17 +269,7 @@ export function ModelConnection({
               </div>
 
               <div className="grid gap-2">
-                <div className="flex items-center justify-between gap-2">
-                  <Label htmlFor="llm-model">Model</Label>
-                  <a
-                    href="https://hail.so/costs"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-muted-foreground hover:text-foreground"
-                  >
-                    Compare prices ↗
-                  </a>
-                </div>
+                <Label htmlFor="llm-model">Model</Label>
                 <Input
                   id="llm-model"
                   className="font-mono"
