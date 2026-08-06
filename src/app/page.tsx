@@ -97,7 +97,9 @@ export default function Home() {
   const [loadingMessage, setLoadingMessage] = useState("");
   const [connectOpen, setConnectOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [advancedOpen, setAdvancedOpen] = useState(true);
+  // Closed by default. While closed, the length/style/TLD values are not sent
+  // to the model at all (see generateDomains) — the model chooses them.
+  const [advancedOpen, setAdvancedOpen] = useState(false);
   const { config, ready, save, clear } = useLlmConfig();
 
   // Constants for keyword limits
@@ -418,12 +420,11 @@ export default function Home() {
                 </div>
 
                 <details
-                  open
                   onToggle={(e) => setAdvancedOpen(e.currentTarget.open)}
                   className="rounded-lg border bg-muted/40"
                 >
                   <summary className="flex items-center justify-between gap-2 rounded-lg px-4 py-3 text-sm font-medium cursor-pointer list-none transition-colors hover:bg-muted/70 [&::-webkit-details-marker]:hidden">
-                    Customize Your Domains
+                    Advanced Customization
                     <ChevronDown
                       aria-hidden="true"
                       className={cn(
