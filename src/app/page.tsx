@@ -274,7 +274,7 @@ export default function Home() {
             href="https://hail.so/costs"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline"
+            className="text-sm font-medium text-foreground underline underline-offset-4 hover:no-underline"
           >
             Compare prices ↗
           </a>

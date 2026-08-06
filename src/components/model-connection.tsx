@@ -226,6 +226,14 @@ export function ModelConnection({
                   Bring a key from any provider. You pay the provider directly,
                   at their cost.
                 </p>
+                <a
+                  href="https://hail.so/costs"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-1 w-fit text-xs font-medium text-blue-600 underline underline-offset-2 hover:text-blue-700"
+                >
+                  Compare model prices ↗
+                </a>
               </div>
 
               {error ? (
