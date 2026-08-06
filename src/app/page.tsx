@@ -23,8 +23,12 @@ import {
 import { Slider } from "@/src/components/ui/slider";
 import { Label } from "@/src/components/ui/label";
 import { Waves } from "@/src/components/ui/waves";
+import { ChevronDown } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 import { Testimonials } from "@/src/components/testimonials";
+import { ModelConnection } from "@/src/components/model-connection";
+import { useLlmConfig } from "@/src/hooks/use-llm-config";
+import { TAGLINE } from "@/src/lib/site";
 
 // Expanded TLD lists for user selection
 const POPULAR_TLDS = ["com", "net", "org", "io", "co", "app", "dev", "ai"];
@@ -55,6 +59,13 @@ const REGISTRAR_COLORS = {
   },
 };
 
+const CONFIG_ERROR_CODES = [
+  "invalid_key",
+  "bad_model",
+  "no_credit",
+  "provider_unreachable",
+];
+
 const DOMAIN_STYLES = [
   { id: "short", label: "Short & Simple" },
   { id: "brandable", label: "Brandable" },
@@ -84,6 +95,10 @@ export default function Home() {
   const [selectedTlds, setSelectedTlds] = useState<string[]>([]);
   const [tldCategory, setTldCategory] = useState("popular");
   const [loadingMessage, setLoadingMessage] = useState("");
+  const [connectOpen, setConnectOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [advancedOpen, setAdvancedOpen] = useState(true);
+  const { config, ready, save, clear } = useLlmConfig();
 
   // Constants for keyword limits
   const MAX_KEYWORDS = 5;
@@ -143,16 +158,24 @@ export default function Home() {
       : POPULAR_TLDS;
   };
 
+  // Accepts a single keyword or a comma-separated list, so pasting
+  // "creative, design, studio" adds three keywords rather than one long one.
   const addKeyword = () => {
-    if (
-      currentKeyword.trim() &&
-      !keywords.includes(currentKeyword.trim()) &&
-      keywords.length < MAX_KEYWORDS &&
-      currentKeyword.trim().length <= MAX_KEYWORD_LENGTH
-    ) {
-      setKeywords([...keywords, currentKeyword.trim()]);
-      setCurrentKeyword("");
+    const parts = currentKeyword
+      .split(",")
+      .map((k) => k.trim().slice(0, MAX_KEYWORD_LENGTH))
+      .filter((k) => k.length > 0);
+
+    if (parts.length === 0) return;
+
+    const next = [...keywords];
+    for (const part of parts) {
+      if (next.length >= MAX_KEYWORDS) break;
+      if (!next.includes(part)) next.push(part);
     }
+
+    setKeywords(next);
+    setCurrentKeyword("");
   };
 
   const removeKeyword = (keyword: string) => {
@@ -160,8 +183,11 @@ export default function Home() {
   };
 
   const generateDomains = async () => {
+    if (!config) return;
+
     setLoading(true);
     setResults([]);
+    setErrorMessage(null);
 
     // Start the loading message animation
     let messageIndex = 0;
@@ -179,27 +205,50 @@ export default function Home() {
         body: JSON.stringify({
           keywords,
           description,
-          domainLength: domainLength[0],
-          domainStyle,
-          tlds: selectedTlds,
+          // Only constrain the model when the visitor can actually see the
+          // knobs. With Customize collapsed, the model picks length, style
+          // and TLDs itself rather than silently obeying stale settings.
+          ...(advancedOpen
+            ? {
+                domainLength: domainLength[0],
+                domainStyle,
+                tlds: selectedTlds,
+              }
+            : {}),
+          llm: config,
         }),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to generate domains");
+      let data: { results?: typeof results; error?: string; code?: string } =
+        {};
+      try {
+        data = await response.json();
+      } catch {
+        data = {
+          error: "The request timed out. Try a faster model, or try again.",
+        };
       }
 
-      const data = await response.json();
-      setResults(data.results);
+      if (!response.ok) {
+        setErrorMessage(data.error ?? "Failed to generate domains");
+        if (data.code && CONFIG_ERROR_CODES.includes(data.code)) {
+          setConnectOpen(true);
+        }
+        return;
+      }
+
+      setResults(data.results ?? []);
     } catch (error) {
       console.error("Error:", error);
-      // Show error message to user
+      setErrorMessage("Failed to generate domains. Please try again.");
     } finally {
       clearInterval(messageInterval);
       setLoading(false);
       setLoadingMessage("");
     }
   };
+
+  const hasInput = keywords.length > 0 || description.trim().length > 0;
 
   return (
     <main>
@@ -219,8 +268,24 @@ export default function Home() {
           />
         </div>
 
-        {/* GitHub button in top right corner */}
-        <div className="fixed top-4 right-4 z-50">
+        {/* Model connection + GitHub button in top right corner */}
+        <div className="fixed top-4 right-4 z-50 flex items-center gap-3">
+          <a
+            href="https://hail.so/costs"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm font-medium text-foreground underline underline-offset-4 hover:no-underline"
+          >
+            Compare models ↗
+          </a>
+          <ModelConnection
+            open={connectOpen}
+            onOpenChange={setConnectOpen}
+            config={config}
+            ready={ready}
+            save={save}
+            clear={clear}
+          />
           <a
             href="https://github.com/r13i/dodomains"
             target="_blank"
@@ -257,14 +322,13 @@ export default function Home() {
                 />
               </div>
             </div>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto backdrop-blur-[1px] bg-background/30 px-2 py-1 rounded">
-              The first 100% free domain name generator to use advanced LLMs for
-              highly creative, available domain suggestions
-            </p>
+            <h1 className="text-xl text-muted-foreground max-w-2xl mx-auto backdrop-blur-[1px] bg-background/30 px-2 py-1 rounded">
+              {TAGLINE}
+            </h1>
             <div className="flex flex-wrap justify-center gap-2 text-sm text-muted-foreground backdrop-blur-[1px] bg-background/30 px-2 py-1 rounded">
               <span>100% Free to Use</span>
               <span>•</span>
-              <span>AI-Powered Suggestions</span>
+              <span>Any LLM Provider</span>
               <span>•</span>
               <span>Available Domains Only</span>
             </div>
@@ -276,8 +340,8 @@ export default function Home() {
               <CardHeader>
                 <CardTitle>Dodo-Powered Domain Name Generator 🦤</CardTitle>
                 <CardDescription>
-                  Enter keywords related to your project and our free LLM
-                  technology will generate uniquely creative, available domain
+                  Enter keywords or describe your project, and the model you
+                  connected will generate uniquely creative, available domain
                   names. Our hard-working dodo is standing by!
                 </CardDescription>
               </CardHeader>
@@ -287,11 +351,18 @@ export default function Home() {
                   <div className="flex gap-2">
                     <Input
                       id="keywords"
-                      placeholder="Add keywords (e.g., creative, design). Don't forget to press enter!"
+                      placeholder="Add keywords (e.g., creative, design). Press enter or use commas."
                       value={currentKeyword}
                       onChange={(e) => setCurrentKeyword(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && addKeyword()}
-                      maxLength={MAX_KEYWORD_LENGTH}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === ",") {
+                          e.preventDefault();
+                          addKeyword();
+                        }
+                      }}
+                      // Long enough for a full comma-separated list; each part
+                      // is trimmed to MAX_KEYWORD_LENGTH when it is added.
+                      maxLength={MAX_KEYWORDS * (MAX_KEYWORD_LENGTH + 2)}
                       disabled={keywords.length >= MAX_KEYWORDS}
                     />
                     <Button
@@ -299,8 +370,7 @@ export default function Home() {
                       className="shrink-0"
                       disabled={
                         keywords.length >= MAX_KEYWORDS ||
-                        !currentKeyword.trim() ||
-                        currentKeyword.length > MAX_KEYWORD_LENGTH
+                        !currentKeyword.trim()
                       }
                     >
                       Add
@@ -330,9 +400,7 @@ export default function Home() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="description">
-                    Project Description (Optional)
-                  </Label>
+                  <Label htmlFor="description">Project Description</Label>
                   <Textarea
                     id="description"
                     placeholder="Briefly describe your project or website"
@@ -344,192 +412,209 @@ export default function Home() {
                   <p className="text-xs text-muted-foreground mt-1">
                     {description.length}/{MAX_DESCRIPTION_LENGTH} characters
                   </p>
+                  <p className="text-xs text-muted-foreground">
+                    Add keywords or a description — either one is enough.
+                  </p>
                 </div>
 
-                <div className="space-y-4 pt-4">
-                  <h3 className="text-sm font-medium">
+                <details
+                  open
+                  onToggle={(e) => setAdvancedOpen(e.currentTarget.open)}
+                  className="rounded-lg border bg-muted/40"
+                >
+                  <summary className="flex items-center justify-between gap-2 rounded-lg px-4 py-3 text-sm font-medium cursor-pointer list-none transition-colors hover:bg-muted/70 [&::-webkit-details-marker]:hidden">
                     Customize Your Domains
-                  </h3>
-
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <Label htmlFor="length">Domain Length</Label>
-                      <span className="text-muted-foreground text-sm">
-                        {domainLength[0]} characters
-                      </span>
-                    </div>
-                    <Slider
-                      id="length"
-                      min={3}
-                      max={20}
-                      step={1}
-                      value={domainLength}
-                      onValueChange={setDomainLength}
+                    <ChevronDown
+                      aria-hidden="true"
+                      className={cn(
+                        "h-4 w-4 shrink-0 text-muted-foreground transition-transform",
+                        advancedOpen && "rotate-180",
+                      )}
                     />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Domain Style</Label>
-                    <div className="grid grid-cols-3 gap-2">
-                      {DOMAIN_STYLES.map((style) => (
-                        <div
-                          key={style.id}
-                          className={`p-2 border rounded flex items-center justify-between cursor-pointer hover:bg-muted/50 ${
-                            domainStyle === style.id
-                              ? "bg-primary/10 border-primary"
-                              : ""
-                          }`}
-                          onClick={() => setDomainStyle(style.id)}
-                        >
-                          <span>{style.label}</span>
-                          {domainStyle === style.id && (
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="16"
-                              height="16"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <polyline points="20 6 9 17 4 12"></polyline>
-                            </svg>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {domainStyle === "funny"
-                        ? "Warning: Our dodo may laugh uncontrollably while generating these"
-                        : domainStyle === "professional"
-                          ? "Our dodo will put on a tiny business suit for this one"
-                          : domainStyle === "creative"
-                            ? "The dodo is stretching its creative wings (though it can't fly)"
-                            : "Our dodo is fluffing its feathers, ready to think"}
-                    </p>
-                  </div>
-
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <Label>TLD Options (Optional)</Label>
-                      <span className="text-muted-foreground text-xs">
-                        Leave unselected for AI to choose
-                      </span>
-                    </div>
-
-                    {/* TLD Category Selector */}
-                    <div className="mb-2">
-                      <Tabs
-                        value={tldCategory}
-                        onValueChange={setTldCategory}
-                        className="w-full"
-                      >
-                        <TabsList className="grid w-full grid-cols-4">
-                          <TabsTrigger value="popular">Popular</TabsTrigger>
-                          <TabsTrigger value="creative">Creative</TabsTrigger>
-                          <TabsTrigger value="country">Country</TabsTrigger>
-                          <TabsTrigger value="specialty">Specialty</TabsTrigger>
-                        </TabsList>
-                      </Tabs>
-                    </div>
-
-                    {/* TLD Selection Grid */}
-                    <div className="grid grid-cols-4 gap-2">
-                      {getTldsByCategory(tldCategory).map((tld) => (
-                        <div
-                          key={tld}
-                          className={`p-2 border rounded flex items-center justify-between cursor-pointer hover:bg-muted/50 ${
-                            selectedTlds.includes(tld)
-                              ? "bg-primary/10 border-primary"
-                              : ""
-                          }`}
-                          onClick={() => toggleTld(tld)}
-                        >
-                          <span className="font-mono">.{tld}</span>
-                          {selectedTlds.includes(tld) && (
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="16"
-                              height="16"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <polyline points="20 6 9 17 4 12"></polyline>
-                            </svg>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Recommended TLDs Info */}
-                    {selectedTlds.length === 0 && (
-                      <div className="text-xs text-muted-foreground mt-2">
-                        <p className="mb-1">
-                          Based on your &quot;{domainStyle}&quot; style, the AI
-                          will prioritize these TLDs:
-                        </p>
-                        <div className="flex flex-wrap gap-1">
-                          {getRecommendedTlds().map((tld) => (
-                            <Badge
-                              key={tld}
-                              variant="outline"
-                              className="text-xs"
-                            >
-                              .{tld}
-                            </Badge>
-                          ))}
-                        </div>
+                  </summary>
+                  <div className="space-y-4 px-4 pb-4">
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <Label htmlFor="length">Domain Length</Label>
+                        <span className="text-muted-foreground text-sm">
+                          {domainLength[0]} characters
+                        </span>
                       </div>
-                    )}
+                      <Slider
+                        id="length"
+                        min={3}
+                        max={20}
+                        step={1}
+                        value={domainLength}
+                        onValueChange={setDomainLength}
+                      />
+                    </div>
 
-                    {/* Selected TLDs Display */}
-                    {selectedTlds.length > 0 && (
-                      <div className="mt-2">
-                        <p className="text-xs text-muted-foreground mb-1">
-                          Selected TLDs:
-                        </p>
-                        <div className="flex flex-wrap gap-1">
-                          {selectedTlds.map((tld) => (
-                            <Badge
-                              key={tld}
-                              className="px-2 py-1 flex items-center gap-1"
-                            >
-                              .{tld}
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  toggleTld(tld);
-                                }}
-                                className="hover:text-accent-foreground"
+                    <div className="space-y-2">
+                      <Label>Domain Style</Label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {DOMAIN_STYLES.map((style) => (
+                          <div
+                            key={style.id}
+                            className={`p-2 border rounded flex items-center justify-between cursor-pointer hover:bg-muted/50 ${
+                              domainStyle === style.id
+                                ? "bg-primary/10 border-primary"
+                                : ""
+                            }`}
+                            onClick={() => setDomainStyle(style.id)}
+                          >
+                            <span>{style.label}</span>
+                            {domainStyle === style.id && (
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
                               >
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  width="12"
-                                  height="12"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="2"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                >
-                                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                                </svg>
-                              </button>
-                            </Badge>
-                          ))}
-                        </div>
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                              </svg>
+                            )}
+                          </div>
+                        ))}
                       </div>
-                    )}
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {domainStyle === "funny"
+                          ? "Warning: Our dodo may laugh uncontrollably while generating these"
+                          : domainStyle === "professional"
+                            ? "Our dodo will put on a tiny business suit for this one"
+                            : domainStyle === "creative"
+                              ? "The dodo is stretching its creative wings (though it can't fly)"
+                              : "Our dodo is fluffing its feathers, ready to think"}
+                      </p>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <Label>TLD Options (Optional)</Label>
+                        <span className="text-muted-foreground text-xs">
+                          Leave unselected for the model to choose
+                        </span>
+                      </div>
+
+                      {/* TLD Category Selector */}
+                      <div className="mb-2">
+                        <Tabs
+                          value={tldCategory}
+                          onValueChange={setTldCategory}
+                          className="w-full"
+                        >
+                          <TabsList className="grid w-full grid-cols-4">
+                            <TabsTrigger value="popular">Popular</TabsTrigger>
+                            <TabsTrigger value="creative">Creative</TabsTrigger>
+                            <TabsTrigger value="country">Country</TabsTrigger>
+                            <TabsTrigger value="specialty">
+                              Specialty
+                            </TabsTrigger>
+                          </TabsList>
+                        </Tabs>
+                      </div>
+
+                      {/* TLD Selection Grid */}
+                      <div className="grid grid-cols-4 gap-2">
+                        {getTldsByCategory(tldCategory).map((tld) => (
+                          <div
+                            key={tld}
+                            className={`p-2 border rounded flex items-center justify-between cursor-pointer hover:bg-muted/50 ${
+                              selectedTlds.includes(tld)
+                                ? "bg-primary/10 border-primary"
+                                : ""
+                            }`}
+                            onClick={() => toggleTld(tld)}
+                          >
+                            <span className="font-mono">.{tld}</span>
+                            {selectedTlds.includes(tld) && (
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                              </svg>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Recommended TLDs Info */}
+                      {selectedTlds.length === 0 && (
+                        <div className="text-xs text-muted-foreground mt-2">
+                          <p className="mb-1">
+                            Based on your &quot;{domainStyle}&quot; style, the
+                            model will prioritize these TLDs:
+                          </p>
+                          <div className="flex flex-wrap gap-1">
+                            {getRecommendedTlds().map((tld) => (
+                              <Badge
+                                key={tld}
+                                variant="outline"
+                                className="text-xs"
+                              >
+                                .{tld}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Selected TLDs Display */}
+                      {selectedTlds.length > 0 && (
+                        <div className="mt-2">
+                          <p className="text-xs text-muted-foreground mb-1">
+                            Selected TLDs:
+                          </p>
+                          <div className="flex flex-wrap gap-1">
+                            {selectedTlds.map((tld) => (
+                              <Badge
+                                key={tld}
+                                className="px-2 py-1 flex items-center gap-1"
+                              >
+                                .{tld}
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleTld(tld);
+                                  }}
+                                  className="hover:text-accent-foreground"
+                                >
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="12"
+                                    height="12"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  >
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                  </svg>
+                                </button>
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
+                </details>
               </CardContent>
               <CardFooter className="flex flex-col gap-4">
                 <div className="w-full text-center mb-1">
@@ -538,16 +623,38 @@ export default function Home() {
                     perfect domain 🦤
                   </p>
                 </div>
+                {errorMessage && (
+                  <p className="w-full text-sm text-destructive text-center">
+                    {errorMessage}
+                  </p>
+                )}
+
                 <Button
                   className="w-full"
                   size="lg"
-                  onClick={generateDomains}
-                  disabled={loading || keywords.length === 0}
+                  variant={ready && !config ? "outline" : "default"}
+                  onClick={() =>
+                    config ? generateDomains() : setConnectOpen(true)
+                  }
+                  disabled={!ready || loading || (Boolean(config) && !hasInput)}
                 >
-                  {loading
-                    ? "Generating Domains..."
-                    : "Generate Domain Ideas 🦤"}
+                  {!ready
+                    ? "Generate Domain Ideas 🦤"
+                    : !config
+                      ? "Connect a model to generate"
+                      : !hasInput
+                        ? "Add keywords or a description"
+                        : loading
+                          ? "Generating Domains..."
+                          : "Generate Domain Ideas 🦤"}
                 </Button>
+
+                {ready && !config && (
+                  <p className="mt-2 text-center text-xs text-muted-foreground">
+                    Google, Groq and Mistral all issue a free API key in about a
+                    minute.
+                  </p>
+                )}
 
                 {loading && (
                   <div className="w-full text-center mt-2">
@@ -766,27 +873,28 @@ export default function Home() {
           {/* Adding SEO-friendly content sections */}
           <section className="mt-12 space-y-6 text-center max-w-3xl mx-auto">
             <h2 className="text-2xl font-bold backdrop-blur-[1px] bg-background/30 py-1 rounded">
-              How Our AI Domain Generator Works
+              How This Dodo-Powered Domain Generator Works
             </h2>
             <div className="grid md:grid-cols-3 gap-6 text-left">
               <div className="space-y-2 backdrop-blur-[1px] bg-background/30 p-2 rounded">
-                <h3 className="font-medium">1. Enter Your Keywords</h3>
+                <h3 className="font-medium">1. Connect Your Model</h3>
                 <p className="text-muted-foreground">
-                  Provide keywords and a brief description of your project
+                  Paste an API key from ChatGPT, Claude, Gemini or any other
+                  provider. Google, Groq and Mistral all give one away free
                 </p>
               </div>
               <div className="space-y-2 backdrop-blur-[1px] bg-background/30 p-2 rounded">
-                <h3 className="font-medium">2. LLM-Powered Generation</h3>
+                <h3 className="font-medium">2. Describe Your Project</h3>
                 <p className="text-muted-foreground">
-                  Our LLM technology creates uniquely creative and brandable
-                  domain suggestions
+                  Add a few keywords, a short description, or both — either one
+                  is enough to get started
                 </p>
               </div>
               <div className="space-y-2 backdrop-blur-[1px] bg-background/30 p-2 rounded">
                 <h3 className="font-medium">3. Availability Check</h3>
                 <p className="text-muted-foreground">
-                  We verify domain availability in real-time so you only see
-                  domains you can register
+                  Every suggestion is checked against real registration records
+                  so you only see domains you can register
                 </p>
               </div>
             </div>
@@ -801,11 +909,17 @@ export default function Home() {
             <ul className="grid md:grid-cols-2 gap-4 text-left">
               <li className="flex gap-2 items-start backdrop-blur-[1px] bg-background/30 p-2 rounded">
                 <span className="text-primary">✓</span>
-                <span>100% free to use with no hidden costs</span>
+                <span>
+                  Free to use, with no account and no upsell — you bring your
+                  own API key and pay your provider directly, at their cost
+                </span>
               </li>
               <li className="flex gap-2 items-start backdrop-blur-[1px] bg-background/30 p-2 rounded">
                 <span className="text-primary">✓</span>
-                <span>First domain generator to use advanced LLMs</span>
+                <span>
+                  Works with any LLM: ChatGPT, Claude, Gemini, Grok, DeepSeek,
+                  Mistral, Llama and any OpenAI-compatible endpoint
+                </span>
               </li>
               <li className="flex gap-2 items-start backdrop-blur-[1px] bg-background/30 p-2 rounded">
                 <span className="text-primary">✓</span>
@@ -826,12 +940,12 @@ export default function Home() {
 
           <footer className="mt-16 pt-8 border-t text-center text-sm text-muted-foreground backdrop-blur-[1px] bg-background/30 p-2 rounded">
             <p>
-              © {new Date().getFullYear()} dodomains.dev. The first 100% free
-              LLM-powered domain name generator.
+              © {new Date().getFullYear()} dodomains.dev. {TAGLINE}.
             </p>
             <p className="mt-2">
               Find uniquely creative and available domain names for your
-              business, startup, or personal project without any cost.
+              business, startup, or personal project. Bring your own API key —
+              we never store it.
             </p>
             <p className="mt-2">
               Built with ❤️ by{" "}
