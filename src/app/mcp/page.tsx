@@ -121,20 +121,21 @@ export default function McpPage() {
             <h2 className="text-2xl font-bold text-center backdrop-blur-[1px] bg-background/30 py-1 rounded">
               Set it up
             </h2>
-            <div className="grid md:grid-cols-3 gap-6">
+            <div className="grid md:grid-cols-3 gap-6 items-stretch">
               <Card className="min-w-0 backdrop-blur-sm bg-background/80 border-opacity-50 shadow-lg">
                 <CardHeader>
                   <CardTitle>Claude Code</CardTitle>
                 </CardHeader>
-                <CardContent className="min-w-0 space-y-3">
-                  <div className="min-w-0 overflow-x-auto rounded-md border bg-muted/40 p-3">
-                    <pre className="font-mono text-xs">
+                <CardContent className="min-w-0 flex-1 flex flex-col space-y-3">
+                  <div className="min-w-0 rounded-md border bg-muted/40 p-3">
+                    <pre className="font-mono text-xs whitespace-pre-wrap break-all">
                       {CLAUDE_CODE_SNIPPET}
                     </pre>
                   </div>
                   <CopyButton
                     value={CLAUDE_CODE_SNIPPET}
                     label="Copy command"
+                    className="mt-auto"
                   />
                 </CardContent>
               </Card>
@@ -143,13 +144,38 @@ export default function McpPage() {
                 <CardHeader>
                   <CardTitle>Claude Desktop</CardTitle>
                 </CardHeader>
-                <CardContent className="min-w-0 space-y-3">
-                  <div className="min-w-0 overflow-x-auto rounded-md border bg-muted/40 p-3">
-                    <pre className="font-mono text-xs overflow-x-auto">
-                      {MCP_CLIENT_CONFIG}
+                <CardContent className="min-w-0 flex-1 flex flex-col space-y-3">
+                  <ol className="list-decimal list-inside text-xs text-muted-foreground space-y-1">
+                    <li>
+                      Open{" "}
+                      <span className="text-foreground">
+                        Settings → Connectors
+                      </span>
+                    </li>
+                    <li>
+                      Click{" "}
+                      <span className="text-foreground">
+                        Add custom connector
+                      </span>
+                    </li>
+                    <li>
+                      Name it <code className="font-mono">dodomains</code>
+                    </li>
+                    <li>Paste the endpoint URL</li>
+                  </ol>
+                  <div className="min-w-0 rounded-md border bg-muted/40 p-3">
+                    <pre className="font-mono text-xs whitespace-pre-wrap break-all">
+                      {MCP_ENDPOINT}
                     </pre>
                   </div>
-                  <CopyButton value={MCP_CLIENT_CONFIG} label="Copy config" />
+                  <p className="text-xs text-muted-foreground">
+                    Custom connectors require a paid Claude plan.
+                  </p>
+                  <CopyButton
+                    value={MCP_ENDPOINT}
+                    label="Copy endpoint"
+                    className="mt-auto"
+                  />
                 </CardContent>
               </Card>
 
@@ -157,16 +183,20 @@ export default function McpPage() {
                 <CardHeader>
                   <CardTitle>Cursor</CardTitle>
                 </CardHeader>
-                <CardContent className="min-w-0 space-y-3">
+                <CardContent className="min-w-0 flex-1 flex flex-col space-y-3">
                   <p className="text-xs text-muted-foreground">
                     Add to <code className="font-mono">.cursor/mcp.json</code>
                   </p>
-                  <div className="min-w-0 overflow-x-auto rounded-md border bg-muted/40 p-3">
-                    <pre className="font-mono text-xs overflow-x-auto">
+                  <div className="min-w-0 rounded-md border bg-muted/40 p-3">
+                    <pre className="font-mono text-xs whitespace-pre-wrap break-all">
                       {MCP_CLIENT_CONFIG}
                     </pre>
                   </div>
-                  <CopyButton value={MCP_CLIENT_CONFIG} label="Copy config" />
+                  <CopyButton
+                    value={MCP_CLIENT_CONFIG}
+                    label="Copy config"
+                    className="mt-auto"
+                  />
                 </CardContent>
               </Card>
             </div>
