@@ -6,5 +6,5 @@ export const size = ogSize;
 export const contentType = ogContentType;
 
 export default async function OpengraphImage() {
-  return renderOgImage();
+  return renderOgImage(TAGLINE);
 }

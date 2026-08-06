@@ -2,17 +2,17 @@ import { ImageResponse } from "next/og";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 
-import { SITE_URL, TAGLINE } from "@/src/lib/site";
+import { SITE_URL } from "@/src/lib/site";
 
 export const ogSize = { width: 1200, height: 630 };
 export const ogContentType = "image/png";
 
 /**
- * Renders the social card from TAGLINE, so the image can never drift from the
- * hero copy. There is no static image checked in — change the tagline in
- * `src/lib/site.ts` and the card follows.
+ * Renders the social card from the given tagline, so the image can never
+ * drift from the copy it is called with. There is no static image checked
+ * in — callers pass the tagline from `src/lib/site.ts` and the card follows.
  */
-export async function renderOgImage() {
+export async function renderOgImage(tagline: string) {
   const logo = await readFile(
     join(process.cwd(), "public/logo-backgroundless.png"),
   );
@@ -53,7 +53,7 @@ export async function renderOgImage() {
           maxWidth: 940,
         }}
       >
-        {TAGLINE}
+        {tagline}
       </div>
 
       <div

@@ -26,3 +26,12 @@ export const SEO_KEYWORDS = [
   "creative domain names",
   "bring your own API key",
 ];
+
+export const MCP_ENDPOINT = `${SITE_URL}/api/mcp`;
+
+export const MCP_TAGLINE = "Give your AI agent a domain availability tool";
+
+export const MCP_DESCRIPTION =
+  "Connect dodomains to Claude, Cursor or any MCP client. Your agent checks " +
+  "domain availability, scores brandability and fetches registration links " +
+  "without leaving the conversation. Free, no account, no API key.";
