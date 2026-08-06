@@ -230,9 +230,9 @@ export function ModelConnection({
                   href="https://hail.so/costs"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-muted-foreground hover:text-foreground w-fit"
+                  className="mt-2 w-fit rounded-md border border-chart-1/40 bg-chart-1/10 px-2.5 py-1 text-xs font-medium text-chart-1 transition-colors hover:bg-chart-1/20"
                 >
-                  Compare prices ↗
+                  Compare model prices ↗
                 </a>
               </div>
 

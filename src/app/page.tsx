@@ -28,6 +28,7 @@ import { cn } from "@/src/lib/utils";
 import { Testimonials } from "@/src/components/testimonials";
 import { ModelConnection } from "@/src/components/model-connection";
 import { useLlmConfig } from "@/src/hooks/use-llm-config";
+import { TAGLINE } from "@/src/lib/site";
 
 // Expanded TLD lists for user selection
 const POPULAR_TLDS = ["com", "net", "org", "io", "co", "app", "dev", "ai"];
@@ -313,10 +314,9 @@ export default function Home() {
                 />
               </div>
             </div>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto backdrop-blur-[1px] bg-background/30 px-2 py-1 rounded">
-              The first 100% free domain name generator to use advanced LLMs for
-              highly creative, available domain suggestions
-            </p>
+            <h1 className="text-xl text-muted-foreground max-w-2xl mx-auto backdrop-blur-[1px] bg-background/30 px-2 py-1 rounded">
+              {TAGLINE}
+            </h1>
             <div className="flex flex-wrap justify-center gap-2 text-sm text-muted-foreground backdrop-blur-[1px] bg-background/30 px-2 py-1 rounded">
               <span>100% Free to Use</span>
               <span>•</span>
@@ -865,27 +865,28 @@ export default function Home() {
           {/* Adding SEO-friendly content sections */}
           <section className="mt-12 space-y-6 text-center max-w-3xl mx-auto">
             <h2 className="text-2xl font-bold backdrop-blur-[1px] bg-background/30 py-1 rounded">
-              How Our AI Domain Generator Works
+              How This Dodo-Powered Domain Generator Works
             </h2>
             <div className="grid md:grid-cols-3 gap-6 text-left">
               <div className="space-y-2 backdrop-blur-[1px] bg-background/30 p-2 rounded">
-                <h3 className="font-medium">1. Enter Your Keywords</h3>
+                <h3 className="font-medium">1. Connect Your Model</h3>
                 <p className="text-muted-foreground">
-                  Provide keywords and a brief description of your project
+                  Paste an API key from ChatGPT, Claude, Gemini or any other
+                  provider. Google, Groq and Mistral all give one away free
                 </p>
               </div>
               <div className="space-y-2 backdrop-blur-[1px] bg-background/30 p-2 rounded">
-                <h3 className="font-medium">2. LLM-Powered Generation</h3>
+                <h3 className="font-medium">2. Describe Your Project</h3>
                 <p className="text-muted-foreground">
-                  Our LLM technology creates uniquely creative and brandable
-                  domain suggestions
+                  Add a few keywords, a short description, or both — either one
+                  is enough to get started
                 </p>
               </div>
               <div className="space-y-2 backdrop-blur-[1px] bg-background/30 p-2 rounded">
                 <h3 className="font-medium">3. Availability Check</h3>
                 <p className="text-muted-foreground">
-                  We verify domain availability in real-time so you only see
-                  domains you can register
+                  Every suggestion is checked against real registration records
+                  so you only see domains you can register
                 </p>
               </div>
             </div>
@@ -900,11 +901,17 @@ export default function Home() {
             <ul className="grid md:grid-cols-2 gap-4 text-left">
               <li className="flex gap-2 items-start backdrop-blur-[1px] bg-background/30 p-2 rounded">
                 <span className="text-primary">✓</span>
-                <span>100% free to use with no hidden costs</span>
+                <span>
+                  Free to use, with no account and no upsell — you bring your
+                  own API key and pay your provider directly, at their cost
+                </span>
               </li>
               <li className="flex gap-2 items-start backdrop-blur-[1px] bg-background/30 p-2 rounded">
                 <span className="text-primary">✓</span>
-                <span>First domain generator to use advanced LLMs</span>
+                <span>
+                  Works with any LLM: ChatGPT, Claude, Gemini, Grok, DeepSeek,
+                  Mistral, Llama and any OpenAI-compatible endpoint
+                </span>
               </li>
               <li className="flex gap-2 items-start backdrop-blur-[1px] bg-background/30 p-2 rounded">
                 <span className="text-primary">✓</span>
@@ -925,12 +932,12 @@ export default function Home() {
 
           <footer className="mt-16 pt-8 border-t text-center text-sm text-muted-foreground backdrop-blur-[1px] bg-background/30 p-2 rounded">
             <p>
-              © {new Date().getFullYear()} dodomains.dev. The first 100% free
-              LLM-powered domain name generator.
+              © {new Date().getFullYear()} dodomains.dev. {TAGLINE}.
             </p>
             <p className="mt-2">
               Find uniquely creative and available domain names for your
-              business, startup, or personal project without any cost.
+              business, startup, or personal project. Bring your own API key —
+              we never store it.
             </p>
             <p className="mt-2">
               Built with ❤️ by{" "}

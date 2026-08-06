@@ -2,6 +2,13 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { PostHogProvider } from "../components/PostHogProvider";
+import {
+  DESCRIPTION,
+  SEO_KEYWORDS,
+  SITE_NAME,
+  SITE_URL,
+  TAGLINE,
+} from "@/src/lib/site";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,49 +20,49 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const TITLE = `${SITE_NAME} | ${TAGLINE}`;
+
+// No `images` key on openGraph or twitter: the cards are generated at
+// src/app/opengraph-image.tsx and src/app/twitter-image.tsx, and Next wires
+// them up by file convention. Setting `images` here would override them with
+// a static file and reintroduce the drift this replaced.
 export const metadata: Metadata = {
-  title: "dodomains | Free LLM-Powered Domain Name Generator",
-  description:
-    "The first 100% free domain generator to use ChatGPT and other large language models to create highly creative and available domain names for your project. Bring your own API key.",
-  keywords: [
-    "free domain generator",
-    "LLM domain generator",
-    "ChatGPT domain names",
-    "AI domain generator",
-    "domain availability checker",
-    "creative domain names",
-  ],
-  authors: [{ name: "dodomains team" }],
+  title: TITLE,
+  description: DESCRIPTION,
+  keywords: SEO_KEYWORDS,
+  applicationName: SITE_NAME,
+  authors: [{ name: "redouane", url: "https://x.com/redouane_cc" }],
+  creator: "redouane",
+  publisher: SITE_NAME,
+  alternates: { canonical: "/" },
+  category: "technology",
   openGraph: {
-    title: "dodomains | Free LLM-Powered Domain Name Generator",
-    description:
-      "The first 100% free domain generator to use ChatGPT and other large language models to create highly creative and available domain names for your project. Bring your own API key.",
-    url: "https://dodomains.dev",
-    siteName: "dodomains",
-    images: [
-      {
-        url: "/logo.jpeg",
-        width: 800,
-        height: 800,
-        alt: "dodomains logo - a cartoon dodo with yellow rays on an orange background",
-      },
-    ],
+    title: TITLE,
+    description: DESCRIPTION,
+    url: SITE_URL,
+    siteName: SITE_NAME,
     locale: "en_US",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "dodomains | Free LLM-Powered Domain Name Generator",
-    description:
-      "The first 100% free domain generator to use ChatGPT and other LLMs for truly creative domain suggestions with real-time availability.",
-    images: ["/logo.jpeg"],
+    title: TITLE,
+    description: DESCRIPTION,
     creator: "@redouane_cc",
+    site: "@redouane_cc",
   },
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
   },
-  metadataBase: new URL("https://dodomains.dev"),
+  metadataBase: new URL(SITE_URL),
 };
 
 export default function RootLayout({
@@ -66,6 +73,36 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        {/*
+          JSON-LD for search results. Next's documented pattern. Every value is
+          a compile-time constant from src/lib/site.ts — no user input reaches
+          this string, so there is no injection surface. Keep it that way: if
+          this ever needs a dynamic value, escape "<" before it goes in.
+        */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebApplication",
+              name: SITE_NAME,
+              url: SITE_URL,
+              description: DESCRIPTION,
+              applicationCategory: "DeveloperApplication",
+              operatingSystem: "Any",
+              offers: {
+                "@type": "Offer",
+                price: "0",
+                priceCurrency: "USD",
+              },
+              author: {
+                "@type": "Person",
+                name: "redouane",
+                url: "https://x.com/redouane_cc",
+              },
+            }),
+          }}
+        />
         <PostHogProvider>{children}</PostHogProvider>
       </body>
     </html>

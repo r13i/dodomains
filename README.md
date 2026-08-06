@@ -1,12 +1,12 @@
 # dodomains.dev 🦤
 
-The first 100% free domain name generator to use advanced LLMs for highly creative, available domain suggestions.
+Free dodo-powered domain name generator using LLMs. Bring your own API key from ChatGPT, Claude, Gemini or any provider.
 
 ![dodomains.dev](public/logo-backgroundless.png)
 
 ## ✨ Features
 
-- **100% Free to Use** - No hidden costs or premium features
+- **Free to Use** - No account, no upsell. You bring your own API key and pay your provider directly, at their cost
 - **Bring Your Own Key** - Works with OpenAI, Anthropic, Google, Groq, Mistral, DeepSeek, xAI, OpenRouter, or any OpenAI-compatible endpoint
 - **Available Domains Only** - Verified against existing domain records
 - **Highly Creative Suggestions** - Beyond traditional domain generators
@@ -81,4 +81,4 @@ This project is open source and available under the [MIT License](LICENSE).
 
 ---
 
-© dodomains.dev. The first 100% free LLM-powered domain name generator.
+© dodomains.dev. Free dodo-powered domain name generator using LLMs.
