@@ -269,7 +269,15 @@ export default function Home() {
         </div>
 
         {/* Model connection + GitHub button in top right corner */}
-        <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
+        <div className="fixed top-4 right-4 z-50 flex items-center gap-3">
+          <a
+            href="https://hail.so/costs"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline"
+          >
+            Compare prices ↗
+          </a>
           <ModelConnection
             open={connectOpen}
             onOpenChange={setConnectOpen}
@@ -489,7 +497,7 @@ export default function Home() {
                       <div className="flex justify-between items-center">
                         <Label>TLD Options (Optional)</Label>
                         <span className="text-muted-foreground text-xs">
-                          Leave unselected for AI to choose
+                          Leave unselected for the model to choose
                         </span>
                       </div>
 
@@ -548,7 +556,7 @@ export default function Home() {
                         <div className="text-xs text-muted-foreground mt-2">
                           <p className="mb-1">
                             Based on your &quot;{domainStyle}&quot; style, the
-                            AI will prioritize these TLDs:
+                            model will prioritize these TLDs:
                           </p>
                           <div className="flex flex-wrap gap-1">
                             {getRecommendedTlds().map((tld) => (
