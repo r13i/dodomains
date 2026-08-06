@@ -11,7 +11,16 @@ const AVAILABILITY_CAVEAT =
 
 export const CHECK_DOMAINS_INPUT = z.object({
   domains: z
-    .array(z.string().min(3).max(253))
+    .array(
+      z
+        .string()
+        .min(3)
+        .max(253)
+        .regex(
+          /^[a-z0-9-]+(\.[a-z0-9-]+)+$/i,
+          "must be a domain with at least two non-empty labels, e.g. example.com",
+        ),
+    )
     .min(1)
     .max(100)
     .describe(
@@ -48,7 +57,7 @@ export async function checkDomainsTool(args: { domains: string[] }) {
     })
     .filter((d): d is { name: string; tld: string } => d !== null);
 
-  const results = await checkAvailability(parsed);
+  const results = await checkAvailability(parsed, "throw");
 
   return {
     results: results.map((r) => ({

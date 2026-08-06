@@ -33,6 +33,22 @@ describe("check_domains input schema", () => {
       false,
     );
   });
+
+  it("rejects labels that are empty or missing", () => {
+    for (const bad of [".com", "foo.", "nodot"]) {
+      expect(
+        CHECK_DOMAINS_INPUT.safeParse({ domains: [bad] }).success,
+      ).toBe(false);
+    }
+  });
+
+  it("accepts legitimate multi-label, hyphenated and digit domains", () => {
+    for (const good of ["foo.co.uk", "my-thing2.io", "a1-b2.com"]) {
+      expect(
+        CHECK_DOMAINS_INPUT.safeParse({ domains: [good] }).success,
+      ).toBe(true);
+    }
+  });
 });
 
 describe("checkDomainsTool", () => {
@@ -62,6 +78,19 @@ describe("checkDomainsTool", () => {
     const out = await checkDomainsTool({ domains: ["nodot", "fine.com"] });
     expect(out.results.some((r) => r.domain === "fine.com")).toBe(true);
     expect(out.results.every((r) => r.domain !== "nodot")).toBe(true);
+  });
+
+  it("rejects rather than reporting availability when the pool rejects", async () => {
+    // mockImplementationOnce (not mockRejectedValue) avoids a vitest 4.1.10
+    // quirk where mockRejectedValue's rejection, combined with this file's
+    // beforeEach(query.mockReset()), surfaces as an unhandled rejection
+    // even though it is properly caught below.
+    query.mockImplementationOnce(() =>
+      Promise.reject(new Error("connection refused")),
+    );
+    await expect(
+      checkDomainsTool({ domains: ["any.com"] }),
+    ).rejects.toThrow(/unreachable/i);
   });
 });
 
