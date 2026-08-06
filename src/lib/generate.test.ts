@@ -90,8 +90,19 @@ describe("generateDomains", () => {
         tld: "com",
       })),
     });
-    await generateDomains(model, base);
+    await generateDomains(model, {
+      ...base,
+      keywords: ["tattoo"],
+      description: "A booking tool",
+    });
+
     expect(model.doGenerateCalls).toHaveLength(1);
+
+    const sent = JSON.stringify(model.doGenerateCalls[0]);
+    expect(sent).toContain("domain name generation expert"); // from SYSTEM_PROMPT
+    expect(sent).toContain("tattoo"); // the keyword
+    expect(sent).toContain("A booking tool"); // the description
+    expect(sent).toContain("balanced"); // the style
   });
 
   it("rejects when the model returns fewer than five suggestions", async () => {

@@ -15,6 +15,10 @@ export type GenerateParams = {
   tlds?: string[];
 };
 
+// The old prompt ended with "Return only valid domain suggestions in JSON format"
+// and a literal JSON skeleton. Both are deliberately gone: Output.object() enforces
+// the schema through each provider's native mechanism, and a competing "reply in
+// JSON" instruction degrades that on several of them. Do not restore them.
 export const SYSTEM_PROMPT =
   "You are a domain name generation expert. Generate creative, memorable, and " +
   "available domain names based on the provided keywords and parameters.";
