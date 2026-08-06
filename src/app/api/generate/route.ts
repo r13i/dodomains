@@ -3,27 +3,12 @@ import { z } from "zod";
 
 import { checkAvailability } from "@/src/lib/domains";
 import { generateDomains } from "@/src/lib/generate";
+import { llmSchema } from "@/src/lib/llm-schema";
 import { mapProviderError } from "@/src/lib/llm-errors";
 import { getProvider } from "@/src/lib/providers";
 import { resolveModel } from "@/src/lib/providers.server";
 
-const llmSchema = z
-  .object({
-    provider: z.string().min(1),
-    model: z.string().min(1).max(100),
-    apiKey: z.string().min(1).max(500),
-    baseUrl: z.string().url().max(300).optional(),
-  })
-  .refine((l) => Boolean(getProvider(l.provider)), {
-    message: "Unknown provider",
-    path: ["provider"],
-  })
-  .refine((l) => !getProvider(l.provider)?.needsBaseUrl || Boolean(l.baseUrl), {
-    message: "A base URL is required for a custom provider",
-    path: ["baseUrl"],
-  });
-
-export const generateRequestSchema = z
+const generateRequestSchema = z
   .object({
     keywords: z.array(z.string().max(30)).max(5).default([]),
     description: z.string().max(300).optional(),
