@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
@@ -37,23 +37,63 @@ export function ModelConnection({ open, onOpenChange }: ModelConnectionProps) {
 
   const meta = getProvider(providerId);
 
-  // Fill the form from storage once it has been read.
-  useEffect(() => {
-    if (!ready || !config) return;
-    setProviderId(config.provider);
-    setModel(config.model);
-    setApiKey(config.apiKey);
-    setBaseUrl(config.baseUrl ?? "");
-  }, [ready, config]);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
+  // Re-sync the form to the saved config whenever the panel opens, so
+  // abandoned edits from a previous open don't linger.
+  useEffect(() => {
+    if (!open || !ready) return;
+    setProviderId(config?.provider ?? "openai");
+    setModel(config?.model ?? defaultModel("openai"));
+    setApiKey(config?.apiKey ?? "");
+    setBaseUrl(config?.baseUrl ?? "");
+    setError(null);
+    setStatus("idle");
+  }, [open, ready, config]);
+
+  // Move focus into the panel on open, and trap Tab inside it.
   useEffect(() => {
     if (!open) return;
+    const panel = panelRef.current;
+    panel?.focus();
+
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onOpenChange(false);
+      if (e.key === "Escape") {
+        // A nested Radix layer (e.g. the provider Select's open listbox)
+        // already handled this Escape and called preventDefault() on it.
+        // Without this check, one Escape press closes both the listbox and
+        // the whole panel instead of backing out one level at a time.
+        if (e.defaultPrevented) return;
+        onOpenChange(false);
+        return;
+      }
+      if (e.key !== "Tab" || !panel) return;
+      const focusable = panel.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
     };
+
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onOpenChange]);
+
+  // Return focus to the trigger when the panel closes.
+  const wasOpen = useRef(open);
+  useEffect(() => {
+    if (wasOpen.current && !open) triggerRef.current?.focus();
+    wasOpen.current = open;
+  }, [open]);
 
   function pickProvider(id: string) {
     setProviderId(id);
@@ -134,11 +174,12 @@ export function ModelConnection({ open, onOpenChange }: ModelConnectionProps) {
   return (
     <div className="relative">
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => onOpenChange(!open)}
         aria-haspopup="dialog"
         aria-expanded={open}
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md bg-background/80 hover:bg-background/90 transition-colors backdrop-blur-sm border-2 border-border/70"
+        className="inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-md bg-background/80 hover:bg-background/90 transition-colors backdrop-blur-sm border-2 border-border/70"
       >
         <span className={cn("h-2 w-2 shrink-0 rounded-full", dot)} />
         <span className="max-w-32 truncate">{triggerLabel}</span>
@@ -156,8 +197,11 @@ export function ModelConnection({ open, onOpenChange }: ModelConnectionProps) {
             onClick={() => onOpenChange(false)}
           />
           <div
+            ref={panelRef}
             role="dialog"
+            aria-modal="true"
             aria-label="Connect your model"
+            tabIndex={-1}
             className="absolute right-0 top-full z-50 mt-2 w-96 max-w-[calc(100vw-2rem)] max-h-[calc(100vh-5rem)] overflow-y-auto rounded-lg border bg-background p-5 shadow-lg"
           >
             <div className="grid gap-5">
