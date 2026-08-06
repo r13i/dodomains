@@ -101,4 +101,26 @@ describe("mapProviderError", () => {
     );
     expect(r.message).not.toContain("acme-secret");
   });
+
+  it("prefers provider_unreachable over no_credit when there is no status code", () => {
+    const err = new APICallError({
+      message: "network down",
+      url: "https://api.example.com/v1/chat",
+      requestBodyValues: {},
+      responseBody: "insufficient_quota",
+      isRetryable: false,
+    });
+    const r = mapProviderError(err, "OpenAI", "gpt-5-mini");
+    expect(r.code).toBe("provider_unreachable");
+    expect(r.status).toBe(502);
+  });
+
+  it("reads a quota body out of a 429 as no_credit, not rate_limited", () => {
+    const r = mapProviderError(
+      apiError(429, '{"error":{"code":"insufficient_quota"}}'),
+      "OpenAI",
+      "gpt-5-mini",
+    );
+    expect(r.code).toBe("no_credit");
+  });
 });

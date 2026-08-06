@@ -27,7 +27,7 @@ function unwrap(err: unknown): unknown {
 
 function looksLikeQuota(body: string | undefined): boolean {
   if (!body) return false;
-  return /insufficient_quota|insufficient[_ ]balance|billing|credit/i.test(
+  return /insufficient_quota|insufficient[_ ]balance|exceeded your current quota|billing_hard_limit_reached/i.test(
     body,
   );
 }
@@ -42,6 +42,13 @@ export function mapProviderError(
   if (APICallError.isInstance(e)) {
     const status = e.statusCode;
 
+    if (status === undefined) {
+      return {
+        code: "provider_unreachable",
+        message: `Could not reach ${providerLabel}. Check the base URL and your connection.`,
+        status: 502,
+      };
+    }
     if (status === 401 || status === 403) {
       return {
         code: "invalid_key",
@@ -68,13 +75,6 @@ export function mapProviderError(
         code: "rate_limited",
         message: `${providerLabel} is rate limiting this key. Wait a moment, then try again.`,
         status: 429,
-      };
-    }
-    if (status === undefined) {
-      return {
-        code: "provider_unreachable",
-        message: `Could not reach ${providerLabel}. Check the base URL and your connection.`,
-        status: 502,
       };
     }
     return {
