@@ -220,13 +220,20 @@ export function ModelConnection({
             className="fixed inset-0 z-40 bg-black/30"
             onClick={() => onOpenChange(false)}
           />
+          {/*
+            Below sm the panel is pinned to the viewport, not to the trigger.
+            `right-0` anchors it to the trigger's right edge, which sits inboard
+            of the viewport edge, so a 24rem panel ran off the left of the
+            screen. A max-width could not save it — the anchor itself was in the
+            wrong place.
+          */}
           <div
             ref={panelRef}
             role="dialog"
             aria-modal="true"
             aria-label="Connect your model"
             tabIndex={-1}
-            className="absolute right-0 top-full z-50 mt-2 w-96 max-w-[calc(100vw-2rem)] max-h-[calc(100vh-5rem)] overflow-y-auto rounded-lg border bg-background p-5 shadow-lg"
+            className="fixed inset-x-2 top-16 z-50 max-h-[calc(100vh-5rem)] w-auto overflow-y-auto rounded-lg border bg-background p-5 shadow-lg sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 sm:w-96"
           >
             <div className="grid gap-5">
               <div className="grid gap-1">
