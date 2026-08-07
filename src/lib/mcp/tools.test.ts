@@ -36,17 +36,17 @@ describe("check_domains input schema", () => {
 
   it("rejects labels that are empty or missing", () => {
     for (const bad of [".com", "foo.", "nodot"]) {
-      expect(
-        CHECK_DOMAINS_INPUT.safeParse({ domains: [bad] }).success,
-      ).toBe(false);
+      expect(CHECK_DOMAINS_INPUT.safeParse({ domains: [bad] }).success).toBe(
+        false,
+      );
     }
   });
 
   it("accepts legitimate multi-label, hyphenated and digit domains", () => {
     for (const good of ["foo.co.uk", "my-thing2.io", "a1-b2.com"]) {
-      expect(
-        CHECK_DOMAINS_INPUT.safeParse({ domains: [good] }).success,
-      ).toBe(true);
+      expect(CHECK_DOMAINS_INPUT.safeParse({ domains: [good] }).success).toBe(
+        true,
+      );
     }
   });
 });
@@ -88,9 +88,9 @@ describe("checkDomainsTool", () => {
     query.mockImplementationOnce(() =>
       Promise.reject(new Error("connection refused")),
     );
-    await expect(
-      checkDomainsTool({ domains: ["any.com"] }),
-    ).rejects.toThrow(/unreachable/i);
+    await expect(checkDomainsTool({ domains: ["any.com"] })).rejects.toThrow(
+      /unreachable/i,
+    );
   });
 });
 
