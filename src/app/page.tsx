@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import posthog from "posthog-js";
 import {
   Card,
   CardContent,
@@ -188,6 +189,15 @@ export default function Home() {
   const generateDomains = async () => {
     if (!config) return;
 
+    posthog.capture("domain_generation_requested", {
+      provider: config.provider,
+      model: config.model,
+      keyword_count: keywords.length,
+      has_description: Boolean(description.trim()),
+      advanced_customization_enabled: advancedOpen,
+      selected_tld_count: advancedOpen ? selectedTlds.length : 0,
+    });
+
     setLoading(true);
     setResults([]);
     setErrorMessage(null);
@@ -233,6 +243,11 @@ export default function Home() {
       }
 
       if (!response.ok) {
+        posthog.capture("domain_generation_failed", {
+          error_code: data.code ?? "request_failed",
+          provider: config.provider,
+          model: config.model,
+        });
         setErrorMessage(data.error ?? "Failed to generate domains");
         if (data.code && CONFIG_ERROR_CODES.includes(data.code)) {
           setConnectOpen(true);
@@ -240,8 +255,22 @@ export default function Home() {
         return;
       }
 
-      setResults(data.results ?? []);
+      const generatedResults = data.results ?? [];
+      posthog.capture("domain_generation_completed", {
+        provider: config.provider,
+        model: config.model,
+        suggestion_count: generatedResults.length,
+        available_suggestion_count: generatedResults.filter(
+          (domain) => domain.available,
+        ).length,
+      });
+      setResults(generatedResults);
     } catch (error) {
+      posthog.capture("domain_generation_failed", {
+        error_code: "network_error",
+        provider: config.provider,
+        model: config.model,
+      });
       console.error("Error:", error);
       setErrorMessage("Failed to generate domains. Please try again.");
     } finally {
@@ -252,6 +281,14 @@ export default function Home() {
   };
 
   const hasInput = keywords.length > 0 || description.trim().length > 0;
+
+  const openRegistrar = (
+    registrar: "godaddy" | "namecheap",
+    affiliateLink: string | undefined,
+  ) => {
+    posthog.capture("registrar_link_opened", { registrar });
+    window.open(affiliateLink, "_blank", "noopener,noreferrer");
+  };
 
   return (
     <main>
@@ -272,18 +309,28 @@ export default function Home() {
         </div>
 
         {/* Model connection + GitHub button in top right corner */}
-        <div className="fixed top-4 right-4 z-50 flex items-center gap-3">
+        <div className="fixed top-4 right-4 z-50 flex items-center gap-2 sm:gap-3">
+          {/*
+            Hidden below sm: the cluster cannot hold every item on a phone, and
+            this link also appears inside the connection panel, so nothing is
+            lost by dropping it on small screens.
+          */}
           <a
             href="https://hail.so/costs"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm font-medium text-foreground underline underline-offset-4 hover:no-underline"
+            className="hidden sm:inline text-sm font-medium text-foreground underline underline-offset-4 hover:no-underline"
           >
             Compare models ↗
           </a>
+          {/*
+            Also hidden below sm, for the same reason as the link above: three
+            pills plus this one overflow a phone. The /mcp page is still
+            reachable from the footer and from search.
+          */}
           <Link
             href="/mcp"
-            className="inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-md bg-background/80 hover:bg-background/90 transition-colors backdrop-blur-sm border-2 border-border/70"
+            className="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-md bg-background/80 hover:bg-background/90 transition-colors backdrop-blur-sm border-2 border-border/70"
           >
             Prefer MCP?
           </Link>
@@ -299,7 +346,8 @@ export default function Home() {
             href="https://github.com/r13i/dodomains"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-md bg-background/80 hover:bg-background/90 transition-colors backdrop-blur-sm border-2 border-border/70"
+            aria-label="GitHub repository"
+            className="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1.5 text-sm rounded-md bg-background/80 hover:bg-background/90 transition-colors backdrop-blur-sm border-2 border-border/70"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -314,7 +362,7 @@ export default function Home() {
             >
               <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
             </svg>
-            GitHub
+            <span className="hidden sm:inline">GitHub</span>
           </a>
         </div>
 
@@ -716,10 +764,9 @@ export default function Home() {
                                   )}
                                   size="sm"
                                   onClick={() =>
-                                    window.open(
+                                    openRegistrar(
+                                      "namecheap",
                                       domain.affiliateLinks?.namecheap,
-                                      "_blank",
-                                      "noopener,noreferrer",
                                     )
                                   }
                                 >
@@ -750,10 +797,9 @@ export default function Home() {
                                   )}
                                   size="sm"
                                   onClick={() =>
-                                    window.open(
+                                    openRegistrar(
+                                      "godaddy",
                                       domain.affiliateLinks?.godaddy,
-                                      "_blank",
-                                      "noopener,noreferrer",
                                     )
                                   }
                                 >
@@ -807,10 +853,9 @@ export default function Home() {
                                     )}
                                     size="sm"
                                     onClick={() =>
-                                      window.open(
+                                      openRegistrar(
+                                        "namecheap",
                                         domain.affiliateLinks?.namecheap,
-                                        "_blank",
-                                        "noopener,noreferrer",
                                       )
                                     }
                                   >
@@ -841,10 +886,9 @@ export default function Home() {
                                     )}
                                     size="sm"
                                     onClick={() =>
-                                      window.open(
+                                      openRegistrar(
+                                        "godaddy",
                                         domain.affiliateLinks?.godaddy,
-                                        "_blank",
-                                        "noopener,noreferrer",
                                       )
                                     }
                                   >
