@@ -22,6 +22,9 @@ if (!projectToken || !posthogHost) {
     // PostHogProvider captures $pageview manually so it can wait for
     // Next's router. Leaving the automatic capture on double-counts.
     capture_pageview: false,
+    // Must be explicit: the default is "if_capture_pageview", which resolves
+    // to off because capture_pageview is false above.
+    capture_pageleave: true,
     capture_exceptions: true,
     debug: process.env.NODE_ENV === "development",
   });

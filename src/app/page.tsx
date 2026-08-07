@@ -285,6 +285,7 @@ export default function Home() {
     registrar: "godaddy" | "namecheap",
     affiliateLink: string | undefined,
   ) => {
+    if (!affiliateLink) return;
     posthog.capture("registrar_link_opened", { registrar });
     window.open(affiliateLink, "_blank", "noopener,noreferrer");
   };
