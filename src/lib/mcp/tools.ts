@@ -2,6 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 
 import { affiliateLinksFor, checkAvailability } from "@/src/lib/domains";
+import { captureMcpToolCall } from "@/src/lib/mcp/analytics";
 import { scoreDomain } from "@/src/lib/scoring";
 
 const AVAILABILITY_CAVEAT =
@@ -95,7 +96,15 @@ export function registerTools(server: McpServer): void {
         AVAILABILITY_CAVEAT,
       inputSchema: CHECK_DOMAINS_INPUT,
     },
-    async (args) => asText(await checkDomainsTool(args)),
+    async (args) => {
+      const out = await checkDomainsTool(args);
+      await captureMcpToolCall("check_domains", {
+        requested_count: args.domains.length,
+        checked_count: out.results.length,
+        available_count: out.results.filter((r) => r.available).length,
+      });
+      return asText(out);
+    },
   );
 
   server.registerTool(
@@ -109,7 +118,15 @@ export function registerTools(server: McpServer): void {
         "have already checked for availability.",
       inputSchema: SCORE_DOMAIN_INPUT,
     },
-    async (args) => asText(scoreDomainTool(args)),
+    async (args) => {
+      const out = scoreDomainTool(args);
+      // The score and the TLD are safe to record; the name is not.
+      await captureMcpToolCall("score_domain", {
+        score: out.score,
+        tld: args.domain.slice(args.domain.indexOf(".") + 1).toLowerCase(),
+      });
+      return asText(out);
+    },
   );
 
   server.registerTool(
@@ -121,6 +138,13 @@ export function registerTools(server: McpServer): void {
         "user has chosen a name they want to register.",
       inputSchema: REGISTRATION_LINKS_INPUT,
     },
-    async (args) => asText(registrationLinksTool(args)),
+    async (args) => {
+      const out = registrationLinksTool(args);
+      // This is the closest thing MCP has to a conversion event.
+      await captureMcpToolCall("get_registration_links", {
+        tld: out.domain.slice(out.domain.indexOf(".") + 1),
+      });
+      return asText(out);
+    },
   );
 }
