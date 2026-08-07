@@ -317,13 +317,14 @@ export function ModelConnection({
                   <Input
                     id="llm-base-url"
                     className="font-mono"
-                    placeholder="http://localhost:11434/v1"
+                    placeholder="https://api.example.com/v1"
                     value={baseUrl}
                     spellCheck={false}
                     onChange={(e) => setBaseUrl(e.target.value)}
                   />
                   <span className="text-xs text-muted-foreground">
-                    Any OpenAI-compatible endpoint.
+                    Any OpenAI-compatible endpoint that is reachable from the
+                    internet. A local address like localhost will not work.
                   </span>
                 </div>
               ) : null}
