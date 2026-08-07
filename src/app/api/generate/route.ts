@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { checkAvailability } from "@/src/lib/domains";
+import { scoreDomain } from "@/src/lib/scoring";
 import { generateDomains } from "@/src/lib/generate";
 import { llmSchema } from "@/src/lib/llm-schema";
 import { mapProviderError } from "@/src/lib/llm-errors";
@@ -50,7 +51,16 @@ export async function POST(request: Request) {
   try {
     const model = resolveModel(llm);
     const suggestions = await generateDomains(model, params);
-    const results = await checkAvailability(suggestions);
+    const checked = await checkAvailability(suggestions);
+
+    // Score here rather than in the client so the API response carries it too,
+    // and so the website and the MCP `score_domain` tool always agree.
+    // Sorted best-first: the model returns names in the order it thought of
+    // them, which is not the order a person wants to read them in.
+    const results = checked
+      .map((r) => ({ ...r, score: scoreDomain(r.name).score }))
+      .sort((a, b) => b.score - a.score);
+
     return NextResponse.json({ results });
   } catch (error) {
     const mapped = mapProviderError(error, providerLabel, llm.model);

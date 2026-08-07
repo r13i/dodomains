@@ -103,8 +103,51 @@ describe("POST /api/generate", () => {
       }),
     );
     await expect(res.json()).resolves.toEqual({
-      results: [{ name: "x.com", available: true, affiliateLinks: null }],
+      results: [
+        {
+          name: "x.com",
+          available: true,
+          affiliateLinks: null,
+          score: expect.any(Number),
+        },
+      ],
     });
+  });
+
+  it("scores every result and sorts them best-first", async () => {
+    checkAvailability.mockResolvedValue([
+      // Deliberately worst-first, so a missing sort cannot pass by luck.
+      {
+        name: "my-really-long-hyphenated-name.xyz",
+        available: true,
+        affiliateLinks: null,
+      },
+      { name: "inkslot.com", available: true, affiliateLinks: null },
+      { name: "ink-slot.io", available: true, affiliateLinks: null },
+    ]);
+
+    const res = await POST(
+      body({
+        keywords: ["tattoo"],
+        domainLength: 10,
+        domainStyle: "balanced",
+        llm,
+      }),
+    );
+    const { results } = await res.json();
+
+    expect(results.map((r: { name: string }) => r.name)).toEqual([
+      "inkslot.com",
+      "ink-slot.io",
+      "my-really-long-hyphenated-name.xyz",
+    ]);
+
+    const scores = results.map((r: { score: number }) => r.score);
+    expect(scores).toEqual([...scores].sort((a: number, b: number) => b - a));
+    for (const s of scores) {
+      expect(s).toBeGreaterThanOrEqual(0);
+      expect(s).toBeLessThanOrEqual(100);
+    }
   });
 
   it("400s with code invalid_key when the provider rejects the key", async () => {
