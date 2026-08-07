@@ -77,6 +77,24 @@ const DOMAIN_STYLES = [
   { id: "professional", label: "Professional" },
 ];
 
+/**
+ * The same 0-100 heuristic the MCP `score_domain` tool exposes. It is a
+ * heuristic, not a verdict, so the badge stays quiet: no colour scale that
+ * would imply more precision than it has.
+ */
+function ScoreBadge({ score }: { score?: number }) {
+  if (typeof score !== "number") return null;
+  return (
+    <Badge
+      variant="secondary"
+      className="font-mono text-[10px] tabular-nums"
+      title="Brandability score out of 100. A heuristic based on length, pronounceability, hyphens, digits, ending and typo risk."
+    >
+      {score}
+    </Badge>
+  );
+}
+
 export default function Home() {
   const [keywords, setKeywords] = useState<string[]>([]);
   const [currentKeyword, setCurrentKeyword] = useState("");
@@ -87,6 +105,7 @@ export default function Home() {
     {
       name: string;
       available: boolean;
+      score?: number;
       affiliateLinks?: {
         godaddy: string;
         namecheap: string;
@@ -730,7 +749,8 @@ export default function Home() {
                   <CardTitle>Domain Suggestions</CardTitle>
                   <CardDescription>
                     Based on your keywords: {keywords.join(", ")}. Our dodo is
-                    proud of these finds!
+                    proud of these finds! Sorted by brandability score — length,
+                    pronounceability, hyphens, digits, ending and typo risk.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -746,7 +766,10 @@ export default function Home() {
                           className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 border rounded-lg gap-2"
                         >
                           <div>
-                            <h3 className="font-medium">{domain.name}</h3>
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-medium">{domain.name}</h3>
+                              <ScoreBadge score={domain.score} />
+                            </div>
                             <p
                               className={`text-sm ${domain.available ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
                             >
@@ -837,7 +860,10 @@ export default function Home() {
                             className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 border rounded-lg gap-2"
                           >
                             <div>
-                              <h3 className="font-medium">{domain.name}</h3>
+                              <div className="flex items-center gap-2">
+                                <h3 className="font-medium">{domain.name}</h3>
+                                <ScoreBadge score={domain.score} />
+                              </div>
                               <p className="text-sm text-green-600 dark:text-green-400">
                                 Available
                               </p>
