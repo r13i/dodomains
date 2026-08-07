@@ -39,6 +39,13 @@ describe("checkAvailability", () => {
     expect(results[0].available).toBe(true);
   });
 
+  it("rejects instead of reporting available when onDbError is 'throw'", async () => {
+    query.mockRejectedValue(new Error("connection refused"));
+    await expect(
+      checkAvailability([{ name: "any", tld: "com" }], "throw"),
+    ).rejects.toThrow(/unreachable/i);
+  });
+
   it("runs one query for the whole batch", async () => {
     query.mockResolvedValue({ rows: [] });
     await checkAvailability([

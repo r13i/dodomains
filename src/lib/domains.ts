@@ -27,11 +27,15 @@ export function affiliateLinksFor(fullDomain: string): AffiliateLinks {
  * The table is a snapshot of registered domains, so `available: true` means
  * "not in our snapshot", not an authoritative registry answer.
  *
- * If the query fails, everything is reported available. This is deliberate and
- * matches the original behavior: a database outage must not block the page.
+ * If the query fails, everything is reported available by default. This is
+ * deliberate and matches the original behavior: a database outage must not
+ * block the page. Pass `onDbError: "throw"` for callers (e.g. the MCP tool)
+ * where reporting every domain available during an outage would be worse
+ * than an error.
  */
 export async function checkAvailability(
   suggestions: DomainSuggestion[],
+  onDbError: "assume-available" | "throw" = "assume-available",
 ): Promise<DomainResult[]> {
   if (suggestions.length === 0) return [];
 
@@ -50,6 +54,11 @@ export async function checkAvailability(
     );
   } catch (error) {
     console.error("Database query error:", error);
+    if (onDbError === "throw") {
+      throw new Error(
+        "The domain availability database is unreachable. No availability was determined.",
+      );
+    }
   }
 
   return suggestions.map((d) => {

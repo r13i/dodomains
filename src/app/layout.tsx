@@ -90,6 +90,12 @@ export default function RootLayout({
               description: DESCRIPTION,
               applicationCategory: "DeveloperApplication",
               operatingSystem: "Any",
+              featureList: [
+                "LLM-powered domain name generation",
+                "Bring your own API key",
+                "Domain availability checking",
+                "MCP server for AI agents",
+              ],
               offers: {
                 "@type": "Offer",
                 price: "0",

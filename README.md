@@ -11,6 +11,33 @@ Free dodo-powered domain name generator using LLMs. Bring your own API key from 
 - **Available Domains Only** - Verified against existing domain records
 - **Highly Creative Suggestions** - Beyond traditional domain generators
 
+## 🔌 MCP Server
+
+dodomains also speaks [MCP](https://modelcontextprotocol.io), so your AI agent can check domain availability without leaving the chat.
+
+- **Endpoint:** `https://dodomains.dev/api/mcp`
+- **Claude Code:**
+  ```bash
+  claude mcp add --transport http dodomains https://dodomains.dev/api/mcp
+  ```
+- **Cursor** (`.cursor/mcp.json`):
+  ```json
+  {
+    "mcpServers": {
+      "dodomains": {
+        "url": "https://dodomains.dev/api/mcp"
+      }
+    }
+  }
+  ```
+- **Claude Desktop:** Settings → Connectors → Add custom connector, name it `dodomains`, paste `https://dodomains.dev/api/mcp`. Custom connectors require a paid Claude plan.
+- **Tools:**
+  - `check_domains` - Checks up to 100 domain names at once against a snapshot of registered domains
+  - `score_domain` - Scores a domain 0-100 on brandability
+  - `get_registration_links` - Returns GoDaddy and Namecheap registration URLs for a domain
+
+See [dodomains.dev/mcp](https://dodomains.dev/mcp) for full setup instructions. The dodo does not judge your naming choices, but the brandability score might.
+
 ## 🚀 Getting Started
 
 ### Prerequisites
