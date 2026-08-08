@@ -1,12 +1,16 @@
 import pool from "@/src/lib/db";
+import { checkPurchasability } from "@/src/lib/namecom";
 
 export type DomainSuggestion = { name: string; tld: string };
 
 export type AffiliateLinks = { godaddy: string; namecheap: string };
 
+export type DomainStatus = "available" | "taken" | "unknown";
+
 export type DomainResult = {
   name: string;
-  available: boolean;
+  status: DomainStatus;
+  /** Non-null only when status is "available". */
   affiliateLinks: AffiliateLinks | null;
 };
 
@@ -22,52 +26,63 @@ export function affiliateLinksFor(fullDomain: string): AffiliateLinks {
 }
 
 /**
- * Checks each suggestion against the registered-domain table.
+ * Looks up domains in the registered-domain snapshot table.
  *
- * The table is a snapshot of registered domains, so `available: true` means
- * "not in our snapshot", not an authoritative registry answer.
+ * The snapshot is only trusted in one direction: a domain present in it is
+ * definitely taken, but absence proves nothing (the snapshot is stale and
+ * covers no ccTLDs). On query failure it returns an empty set, which the
+ * caller maps to "unknown" — never to "available".
+ */
+async function snapshotRegistered(fullDomains: string[]): Promise<Set<string>> {
+  try {
+    const result = await pool.query({
+      text: `SELECT domain FROM domains WHERE domain = ANY($1)`,
+      values: [fullDomains],
+    });
+    return new Set(
+      result.rows.map((row: { domain: string }) => row.domain.toLowerCase()),
+    );
+  } catch (error) {
+    console.error("Database query error:", error);
+    return new Set();
+  }
+}
+
+/**
+ * Determines availability for each suggestion.
  *
- * If the query fails, everything is reported available by default. This is
- * deliberate and matches the original behavior: a database outage must not
- * block the page. Pass `onDbError: "throw"` for callers (e.g. the MCP tool)
- * where reporting every domain available during an outage would be worse
- * than an error.
+ * Primary source: name.com's live availability API. Fallback for domains it
+ * gives no answer for: the registered-domain snapshot, trusted only for
+ * "taken". Every failure path degrades to "unknown" — no error, timeout or
+ * missing row may ever render a domain as available.
  */
 export async function checkAvailability(
   suggestions: DomainSuggestion[],
-  onDbError: "assume-available" | "throw" = "assume-available",
 ): Promise<DomainResult[]> {
   if (suggestions.length === 0) return [];
 
   const fullDomains = suggestions.map((d) =>
     `${d.name}.${d.tld}`.toLowerCase(),
   );
-  let registered = new Set<string>();
 
-  try {
-    const result = await pool.query({
-      text: `SELECT domain FROM domains WHERE domain = ANY($1)`,
-      values: [fullDomains],
-    });
-    registered = new Set(
-      result.rows.map((row: { domain: string }) => row.domain.toLowerCase()),
-    );
-  } catch (error) {
-    console.error("Database query error:", error);
-    if (onDbError === "throw") {
-      throw new Error(
-        "The domain availability database is unreachable. No availability was determined.",
-      );
-    }
-  }
+  const verdicts = await checkPurchasability(fullDomains);
+
+  const unresolved = fullDomains.filter((d) => !verdicts.has(d));
+  const registered =
+    unresolved.length > 0
+      ? await snapshotRegistered(unresolved)
+      : new Set<string>();
 
   return suggestions.map((d) => {
     const fullDomain = `${d.name}.${d.tld}`;
-    const available = !registered.has(fullDomain.toLowerCase());
+    const key = fullDomain.toLowerCase();
+    const status: DomainStatus =
+      verdicts.get(key) ?? (registered.has(key) ? "taken" : "unknown");
     return {
       name: fullDomain,
-      available,
-      affiliateLinks: available ? affiliateLinksFor(fullDomain) : null,
+      status,
+      affiliateLinks:
+        status === "available" ? affiliateLinksFor(fullDomain) : null,
     };
   });
 }

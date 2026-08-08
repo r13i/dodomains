@@ -86,6 +86,7 @@ No LLM key is needed to run the app — visitors bring their own and it never to
 
 - `DATABASE_URL` - Postgres connection string
 - `NEXT_PUBLIC_POSTHOG_KEY` - PostHog project API key
+- `NAME_COM_USERNAME` / `NAME_COM_TOKEN` - name.com Core API credentials for live availability checks (without them, results fall back to the snapshot and show "Couldn't verify" instead of "Available")
 
 ## 🛠️ How It Works
 

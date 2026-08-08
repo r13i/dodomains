@@ -28,11 +28,11 @@ describe("POST /api/mcp", () => {
     }
   });
 
-  it("warns in check_domains' description that this is not a registry check", async () => {
+  it("warns in check_domains' description that unknown needs confirming", async () => {
     const res = await POST(
       rpc({ jsonrpc: "2.0", id: 1, method: "tools/list", params: {} }),
     );
-    expect(await res.text()).toMatch(/not an authoritative registry/i);
+    expect(await res.text()).toMatch(/confirm at a registrar/i);
   });
 
   it("rejects a JSON-RPC batch (array body) with 400 and -32600", async () => {
