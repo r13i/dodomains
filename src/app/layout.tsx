@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { PostHogProvider } from "../components/PostHogProvider";
 import {
@@ -110,6 +111,12 @@ export default function RootLayout({
           }}
         />
         <PostHogProvider>{children}</PostHogProvider>
+        {/* Ahrefs web analytics. Loads async after hydration. */}
+        <Script
+          src="https://analytics.ahrefs.com/analytics.js"
+          data-key="VNYPFL1piMTVz98aGmZo+Q"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );
