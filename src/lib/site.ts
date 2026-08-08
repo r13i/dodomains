@@ -16,8 +16,18 @@ export const SITE_URL = "https://dodomains.dev";
  */
 export const REGISTERED_DOMAIN_COUNT = "270M+";
 
-/** The one line the whole site is built around. */
+/**
+ * TAGLINE is the SEO line: it feeds the <title>, the OG/Twitter cards and the
+ * meta description, so it stays keyword-rich. HERO_* is the visible hook a
+ * human reads first — a joke, deliberately not keyword-shaped. The two are
+ * separate on purpose; do not collapse them.
+ */
 export const TAGLINE = "Free dodo-powered domain name generator using LLMs";
+
+export const HERO_HEADLINE = "Anyone can ship code. Marketing is hard.";
+
+export const HERO_SUBHEAD =
+  "Don't let a bad name send your project the way of the dodo 🪦🍗";
 
 export const DESCRIPTION =
   "Free dodo-powered domain name generator using LLMs. Bring your own API key " +
