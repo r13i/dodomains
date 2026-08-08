@@ -407,12 +407,16 @@ export default function Home() {
                 />
               </div>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-balance max-w-2xl mx-auto backdrop-blur-[1px] bg-background/30 px-2 py-1 rounded">
+            {/*
+              Both sentences are one paragraph in the original muted-tagline
+              style (the look from the early hero): same size, same grey, the
+              second line simply continues the first.
+            */}
+            <h1 className="text-xl sm:text-2xl text-muted-foreground text-balance max-w-4xl mx-auto backdrop-blur-[1px] bg-background/30 px-2 py-1 rounded">
               {HERO_HEADLINE}
-            </h1>
-            <p className="text-base sm:text-lg text-muted-foreground text-balance max-w-2xl mx-auto backdrop-blur-[1px] bg-background/30 px-2 py-1 rounded">
+              <br />
               {HERO_SUBHEAD}
-            </p>
+            </h1>
             <div className="flex flex-wrap justify-center gap-2 text-sm text-muted-foreground backdrop-blur-[1px] bg-background/30 px-2 py-1 rounded">
               <span>100% Free to Use</span>
               <span>•</span>

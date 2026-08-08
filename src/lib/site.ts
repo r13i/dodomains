@@ -24,7 +24,7 @@ export const REGISTERED_DOMAIN_COUNT = "270M+";
  */
 export const TAGLINE = "Free dodo-powered domain name generator using LLMs";
 
-export const HERO_HEADLINE = "Anyone can ship code. Marketing is hard.";
+export const HERO_HEADLINE = "Shipping code is easy, but marketing is hard.";
 
 export const HERO_SUBHEAD =
   "Don't let a bad name send your project the way of the dodo 🪦🍗";
