@@ -345,8 +345,9 @@ export default function Home() {
           </a>
           {/*
             Also hidden below sm, for the same reason as the link above: three
-            pills plus this one overflow a phone. The /mcp page is still
-            reachable from the footer and from search.
+            pills plus this one overflow a phone. Mobile discovery of /mcp
+            therefore depends entirely on the footer link and the "Why Choose"
+            bullet — keep both if you keep this hidden.
           */}
           <Link
             href="/mcp"
@@ -1017,9 +1018,12 @@ export default function Home() {
               <li className="flex gap-2 items-start backdrop-blur-[1px] bg-background/30 p-2 rounded">
                 <span className="text-primary">✓</span>
                 <span>
-                  Works inside your AI agent too — connect the MCP server and
-                  Claude or Cursor can check availability without leaving the
-                  chat
+                  Works inside your AI agent too — connect the{" "}
+                  <Link href="/mcp" className="underline underline-offset-2">
+                    MCP server
+                  </Link>{" "}
+                  and Claude or Cursor can check availability without leaving
+                  the chat
                 </span>
               </li>
             </ul>
@@ -1033,6 +1037,19 @@ export default function Home() {
               Find uniquely creative and available domain names for your
               business, startup, or personal project. Bring your own API key —
               we never store it.
+            </p>
+            {/*
+              The navbar's "Prefer MCP?" pill is hidden below sm so four pills
+              do not overflow a phone. This footer link is what makes /mcp
+              reachable on mobile at all — do not remove it without putting
+              that pill back.
+            */}
+            <p className="mt-2">
+              Using an AI agent?{" "}
+              <Link href="/mcp" className="underline underline-offset-2">
+                Connect the MCP server
+              </Link>
+              .
             </p>
             <p className="mt-2">
               Built with ❤️ by{" "}
