@@ -30,7 +30,12 @@ import { cn } from "@/src/lib/utils";
 import { Testimonials } from "@/src/components/testimonials";
 import { ModelConnection } from "@/src/components/model-connection";
 import { useLlmConfig } from "@/src/hooks/use-llm-config";
-import { REGISTERED_DOMAIN_COUNT, TAGLINE } from "@/src/lib/site";
+import {
+  HERO_HEADLINE,
+  HERO_SUBHEAD,
+  REGISTERED_DOMAIN_COUNT,
+  TAGLINE,
+} from "@/src/lib/site";
 
 // Expanded TLD lists for user selection
 const POPULAR_TLDS = ["com", "net", "org", "io", "co", "app", "dev", "ai"];
@@ -402,19 +407,20 @@ export default function Home() {
                 />
               </div>
             </div>
-            <h1 className="text-xl text-muted-foreground max-w-2xl mx-auto backdrop-blur-[1px] bg-background/30 px-2 py-1 rounded">
-              {TAGLINE}
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-balance max-w-2xl mx-auto backdrop-blur-[1px] bg-background/30 px-2 py-1 rounded">
+              {HERO_HEADLINE}
             </h1>
-            <p className="text-base font-medium max-w-2xl mx-auto backdrop-blur-[1px] bg-background/30 px-2 py-1 rounded">
-              Every name is checked against {REGISTERED_DOMAIN_COUNT} registered
-              domains — you only see the ones you can actually register.
+            <p className="text-base sm:text-lg text-muted-foreground text-balance max-w-2xl mx-auto backdrop-blur-[1px] bg-background/30 px-2 py-1 rounded">
+              {HERO_SUBHEAD}
             </p>
             <div className="flex flex-wrap justify-center gap-2 text-sm text-muted-foreground backdrop-blur-[1px] bg-background/30 px-2 py-1 rounded">
               <span>100% Free to Use</span>
               <span>•</span>
               <span>Any LLM Provider</span>
               <span>•</span>
-              <span>Checked vs {REGISTERED_DOMAIN_COUNT} Records</span>
+              <span>
+                Checked against {REGISTERED_DOMAIN_COUNT} registered domains
+              </span>
             </div>
           </header>
 
@@ -1040,17 +1046,7 @@ export default function Home() {
             <p>
               © {new Date().getFullYear()} dodomains.dev. {TAGLINE}.
             </p>
-            <p className="mt-2">
-              Find uniquely creative and available domain names for your
-              business, startup, or personal project. Bring your own API key —
-              we never store it.
-            </p>
-            {/*
-              The navbar's "Prefer MCP?" pill is hidden below sm so four pills
-              do not overflow a phone. This footer link is what makes /mcp
-              reachable on mobile at all — do not remove it without putting
-              that pill back.
-            */}
+            {/* A second, plain-text path to /mcp for anyone who reads to the end. */}
             <p className="mt-2">
               Using an AI agent?{" "}
               <Link href="/mcp" className="underline underline-offset-2">
