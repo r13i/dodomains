@@ -4,7 +4,7 @@ import { z } from "zod";
 
 import type { DomainSuggestion } from "@/src/lib/domains";
 
-const POPULAR_TLDS = ["com", "net", "org", "io", "co", "app", "dev"];
+const POPULAR_TLDS = ["com", "net", "org", "io", "co", "app", "dev", "ai"];
 const CREATIVE_TLDS = ["ai", "io", "co", "me", "app", "xyz", "tech", "design"];
 
 export type GenerateParams = {

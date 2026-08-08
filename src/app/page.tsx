@@ -38,16 +38,19 @@ import {
 } from "@/src/lib/site";
 
 // Expanded TLD lists for user selection
+// Only TLDs whose availability we can actually verify are offered.
+// Dropped: .web (delegated but not registrable by the public), .de/.eu
+// (the availability API returns no answer for them), .au (unreliable
+// answers at our batch size).
 const POPULAR_TLDS = ["com", "net", "org", "io", "co", "app", "dev", "ai"];
-const CREATIVE_TLDS = ["ai", "io", "co", "me", "app", "xyz", "tech", "design"];
-const COUNTRY_TLDS = ["us", "uk", "ca", "eu", "de", "fr", "jp", "au"];
+const CREATIVE_TLDS = ["me", "xyz", "tech", "design"];
+const COUNTRY_TLDS = ["us", "uk", "ca", "fr", "jp"];
 const SPECIALTY_TLDS = [
   "store",
   "shop",
   "blog",
   "online",
   "site",
-  "web",
   "digital",
   "cloud",
 ];
@@ -115,7 +118,7 @@ export default function Home() {
   const [results, setResults] = useState<
     {
       name: string;
-      available: boolean;
+      status: "available" | "taken" | "unknown";
       score?: number;
       affiliateLinks?: {
         godaddy: string;
@@ -291,7 +294,7 @@ export default function Home() {
         model: config.model,
         suggestion_count: generatedResults.length,
         available_suggestion_count: generatedResults.filter(
-          (domain) => domain.available,
+          (domain: { status: string }) => domain.status === "available",
         ).length,
       });
       setResults(generatedResults);
@@ -794,13 +797,23 @@ export default function Home() {
                               <ScoreBadge score={domain.score} />
                             </div>
                             <p
-                              className={`text-sm ${domain.available ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
+                              className={`text-sm ${
+                                domain.status === "available"
+                                  ? "text-green-600 dark:text-green-400"
+                                  : domain.status === "taken"
+                                    ? "text-red-600 dark:text-red-400"
+                                    : "text-amber-600 dark:text-amber-400"
+                              }`}
                             >
-                              {domain.available ? "Available" : "Taken"}
+                              {domain.status === "available"
+                                ? "Available"
+                                : domain.status === "taken"
+                                  ? "Taken"
+                                  : "Couldn't verify"}
                             </p>
                           </div>
                           <div className="flex items-center w-full sm:w-auto">
-                            {domain.available && (
+                            {domain.status === "available" && (
                               <div className="flex flex-col sm:flex-row gap-1 items-stretch sm:items-center w-full sm:w-auto">
                                 <Button
                                   className={cn(
@@ -876,7 +889,7 @@ export default function Home() {
                     </TabsContent>
                     <TabsContent value="available" className="space-y-4 mt-4">
                       {results
-                        .filter((d) => d.available)
+                        .filter((d) => d.status === "available")
                         .map((domain, i) => (
                           <div
                             key={i}
@@ -892,7 +905,7 @@ export default function Home() {
                               </p>
                             </div>
                             <div className="flex items-center w-full sm:w-auto">
-                              {domain.available && (
+                              {domain.status === "available" && (
                                 <div className="flex flex-col sm:flex-row gap-1 items-stretch sm:items-center w-full sm:w-auto">
                                   <Button
                                     className={cn(

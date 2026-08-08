@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { query } = vi.hoisted(() => ({ query: vi.fn() }));
 vi.mock("@/src/lib/db", () => ({ default: { query } }));
@@ -10,7 +10,26 @@ import {
   scoreDomainTool,
 } from "@/src/lib/mcp/tools";
 
-beforeEach(() => query.mockReset());
+const fetchMock = vi.fn();
+
+function namecomResponse(
+  results: { domainName: string; purchasable: boolean; purchaseType?: string }[],
+) {
+  return { ok: true, status: 200, json: async () => ({ results }) };
+}
+
+beforeEach(() => {
+  query.mockReset();
+  vi.stubGlobal("fetch", fetchMock);
+  vi.stubEnv("NAME_COM_USERNAME", "user");
+  vi.stubEnv("NAME_COM_TOKEN", "token");
+});
+
+afterEach(() => {
+  fetchMock.mockReset();
+  vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
+});
 
 describe("check_domains input schema", () => {
   it("rejects an empty list", () => {
@@ -52,45 +71,49 @@ describe("check_domains input schema", () => {
 });
 
 describe("checkDomainsTool", () => {
-  it("marks registered domains unavailable and gives links only for the rest", async () => {
-    query.mockResolvedValue({ rows: [{ domain: "taken.com" }] });
+  it("reports status per domain and gives links only for available ones", async () => {
+    fetchMock.mockResolvedValue(
+      namecomResponse([
+        { domainName: "taken.com", purchasable: false },
+        {
+          domainName: "free.io",
+          purchasable: true,
+          purchaseType: "registration",
+        },
+      ]),
+    );
 
     const out = await checkDomainsTool({ domains: ["taken.com", "free.io"] });
 
     expect(out.results).toHaveLength(2);
     expect(out.results[0]).toMatchObject({
       domain: "taken.com",
-      available: false,
+      status: "taken",
       registrationUrls: null,
     });
-    expect(out.results[1].available).toBe(true);
+    expect(out.results[1].status).toBe("available");
     expect(out.results[1].registrationUrls).not.toBeNull();
   });
 
-  it("uses one query for the whole batch", async () => {
-    query.mockResolvedValue({ rows: [] });
-    await checkDomainsTool({ domains: ["a.com", "b.com", "c.com"] });
-    expect(query).toHaveBeenCalledTimes(1);
-  });
-
   it("skips an entry with no dot rather than throwing", async () => {
+    fetchMock.mockResolvedValue(namecomResponse([]));
     query.mockResolvedValue({ rows: [] });
     const out = await checkDomainsTool({ domains: ["nodot", "fine.com"] });
     expect(out.results.some((r) => r.domain === "fine.com")).toBe(true);
     expect(out.results.every((r) => r.domain !== "nodot")).toBe(true);
   });
 
-  it("rejects rather than reporting availability when the pool rejects", async () => {
-    // mockImplementationOnce (not mockRejectedValue) avoids a vitest 4.1.10
-    // quirk where mockRejectedValue's rejection, combined with this file's
-    // beforeEach(query.mockReset()), surfaces as an unhandled rejection
-    // even though it is properly caught below.
+  it("degrades to unknown instead of failing when every source is down", async () => {
+    fetchMock.mockRejectedValue(new Error("network down"));
     query.mockImplementationOnce(() =>
       Promise.reject(new Error("connection refused")),
     );
-    await expect(checkDomainsTool({ domains: ["any.com"] })).rejects.toThrow(
-      /unreachable/i,
-    );
+    const out = await checkDomainsTool({ domains: ["any.com"] });
+    expect(out.results[0]).toMatchObject({
+      domain: "any.com",
+      status: "unknown",
+      registrationUrls: null,
+    });
   });
 });
 

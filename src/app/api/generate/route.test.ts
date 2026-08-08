@@ -32,7 +32,7 @@ beforeEach(() => {
   checkAvailability
     .mockReset()
     .mockResolvedValue([
-      { name: "x.com", available: true, affiliateLinks: null },
+      { name: "x.com", status: "unknown", affiliateLinks: null },
     ]);
 });
 
@@ -106,7 +106,7 @@ describe("POST /api/generate", () => {
       results: [
         {
           name: "x.com",
-          available: true,
+          status: "unknown",
           affiliateLinks: null,
           score: expect.any(Number),
         },
@@ -119,11 +119,11 @@ describe("POST /api/generate", () => {
       // Deliberately worst-first, so a missing sort cannot pass by luck.
       {
         name: "my-really-long-hyphenated-name.xyz",
-        available: true,
+        status: "unknown",
         affiliateLinks: null,
       },
-      { name: "inkslot.com", available: true, affiliateLinks: null },
-      { name: "ink-slot.io", available: true, affiliateLinks: null },
+      { name: "inkslot.com", status: "unknown", affiliateLinks: null },
+      { name: "ink-slot.io", status: "unknown", affiliateLinks: null },
     ]);
 
     const res = await POST(

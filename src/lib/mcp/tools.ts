@@ -6,9 +6,10 @@ import { captureMcpToolCall } from "@/src/lib/mcp/analytics";
 import { scoreDomain } from "@/src/lib/scoring";
 
 const AVAILABILITY_CAVEAT =
-  "IMPORTANT: 'available' means the domain is not present in our snapshot of " +
-  "registered domains. It is not an authoritative registry or WHOIS check. " +
-  "Tell the user to confirm at a registrar before relying on it.";
+  "Availability is checked live against a registrar API, with a " +
+  "registered-domains snapshot as fallback. Status is 'available', 'taken' " +
+  "or 'unknown' — 'unknown' means it could not be verified; tell the user " +
+  "to confirm at a registrar before relying on it.";
 
 export const CHECK_DOMAINS_INPUT = z.object({
   domains: z
@@ -58,12 +59,12 @@ export async function checkDomainsTool(args: { domains: string[] }) {
     })
     .filter((d): d is { name: string; tld: string } => d !== null);
 
-  const results = await checkAvailability(parsed, "throw");
+  const results = await checkAvailability(parsed);
 
   return {
     results: results.map((r) => ({
       domain: r.name,
-      available: r.available,
+      status: r.status,
       registrationUrls: r.affiliateLinks,
     })),
   };
@@ -90,7 +91,7 @@ export function registerTools(server: McpServer): void {
     {
       title: "Check domain availability",
       description:
-        "Check up to 100 domain names against a database of registered domains in a " +
+        "Check up to 100 domain names for registration availability in a " +
         "single call. Use this after brainstorming candidate names to filter out the " +
         "ones that are already taken. " +
         AVAILABILITY_CAVEAT,
@@ -101,7 +102,8 @@ export function registerTools(server: McpServer): void {
       await captureMcpToolCall("check_domains", {
         requested_count: args.domains.length,
         checked_count: out.results.length,
-        available_count: out.results.filter((r) => r.available).length,
+        available_count: out.results.filter((r) => r.status === "available")
+          .length,
       });
       return asText(out);
     },
