@@ -30,7 +30,12 @@ import { cn } from "@/src/lib/utils";
 import { Testimonials } from "@/src/components/testimonials";
 import { ModelConnection } from "@/src/components/model-connection";
 import { useLlmConfig } from "@/src/hooks/use-llm-config";
-import { REGISTERED_DOMAIN_COUNT, TAGLINE } from "@/src/lib/site";
+import {
+  HERO_HEADLINE,
+  HERO_SUBHEAD,
+  REGISTERED_DOMAIN_COUNT,
+  TAGLINE,
+} from "@/src/lib/site";
 
 // Expanded TLD lists for user selection
 const POPULAR_TLDS = ["com", "net", "org", "io", "co", "app", "dev", "ai"];
@@ -402,9 +407,12 @@ export default function Home() {
                 />
               </div>
             </div>
-            <h1 className="text-xl text-muted-foreground max-w-2xl mx-auto backdrop-blur-[1px] bg-background/30 px-2 py-1 rounded">
-              {TAGLINE}
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-balance max-w-2xl mx-auto backdrop-blur-[1px] bg-background/30 px-2 py-1 rounded">
+              {HERO_HEADLINE}
             </h1>
+            <p className="text-base sm:text-lg text-muted-foreground text-balance max-w-2xl mx-auto backdrop-blur-[1px] bg-background/30 px-2 py-1 rounded">
+              {HERO_SUBHEAD}
+            </p>
             <div className="flex flex-wrap justify-center gap-2 text-sm text-muted-foreground backdrop-blur-[1px] bg-background/30 px-2 py-1 rounded">
               <span>100% Free to Use</span>
               <span>•</span>
