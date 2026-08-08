@@ -410,7 +410,7 @@ export default function Home() {
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-balance max-w-2xl mx-auto backdrop-blur-[1px] bg-background/30 px-2 py-1 rounded">
               {HERO_HEADLINE}
             </h1>
-            <p className="text-base sm:text-lg text-muted-foreground text-balance max-w-2xl mx-auto backdrop-blur-[1px] bg-background/30 px-2 py-1 rounded">
+            <p className="text-2xl sm:text-3xl font-bold tracking-tight text-balance max-w-2xl mx-auto backdrop-blur-[1px] bg-background/30 px-2 py-1 rounded">
               {HERO_SUBHEAD}
             </p>
             <div className="flex flex-wrap justify-center gap-2 text-sm text-muted-foreground backdrop-blur-[1px] bg-background/30 px-2 py-1 rounded">
