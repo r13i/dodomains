@@ -83,19 +83,25 @@ const DOMAIN_STYLES = [
 ];
 
 /**
- * The same 0-100 heuristic the MCP `score_domain` tool exposes. It is a
- * heuristic, not a verdict, so the badge stays quiet: no colour scale that
- * would imply more precision than it has.
+ * The same 0-100 heuristic the MCP `score_domain` tool exposes. Labelled
+ * "score: x/100" and coloured on a coarse three-band scale so a bare number
+ * like "91" isn't mistaken for something else (a price, a rank).
  */
+function scoreColor(score: number) {
+  if (score >= 80) return "text-green-600 dark:text-green-400";
+  if (score >= 60) return "text-amber-600 dark:text-amber-400";
+  return "text-red-600 dark:text-red-400";
+}
+
 function ScoreBadge({ score }: { score?: number }) {
   if (typeof score !== "number") return null;
   return (
     <Badge
       variant="secondary"
-      className="font-mono text-[10px] tabular-nums"
+      className={`font-mono text-[10px] tabular-nums ${scoreColor(score)}`}
       title="Brandability score out of 100. A heuristic based on length, pronounceability, hyphens, digits, ending and typo risk."
     >
-      {score}
+      score: {score}/100
     </Badge>
   );
 }
