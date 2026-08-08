@@ -9,13 +9,20 @@
 export const SITE_NAME = "dodomains";
 export const SITE_URL = "https://dodomains.dev";
 
+/**
+ * The count of registered domains every suggestion is checked against.
+ * One constant so the hero, the metadata and the OG card can never disagree.
+ * If the dataset grows, change it here and everything follows.
+ */
+export const REGISTERED_DOMAIN_COUNT = "270M+";
+
 /** The one line the whole site is built around. */
 export const TAGLINE = "Free dodo-powered domain name generator using LLMs";
 
 export const DESCRIPTION =
   "Free dodo-powered domain name generator using LLMs. Bring your own API key " +
-  "from ChatGPT, Claude, Gemini or any provider, and get creative domain names " +
-  "checked against real registrations before you see them.";
+  `from ChatGPT, Claude, Gemini or any provider. Every name is checked against ` +
+  `${REGISTERED_DOMAIN_COUNT} registered domains, so you only see ones you can actually register.`;
 
 export const SEO_KEYWORDS = [
   "free domain generator",
@@ -23,6 +30,7 @@ export const SEO_KEYWORDS = [
   "ChatGPT domain names",
   "AI domain generator",
   "domain availability checker",
+  "available domain finder",
   "creative domain names",
   "bring your own API key",
 ];

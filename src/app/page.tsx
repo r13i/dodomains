@@ -30,7 +30,7 @@ import { cn } from "@/src/lib/utils";
 import { Testimonials } from "@/src/components/testimonials";
 import { ModelConnection } from "@/src/components/model-connection";
 import { useLlmConfig } from "@/src/hooks/use-llm-config";
-import { TAGLINE } from "@/src/lib/site";
+import { REGISTERED_DOMAIN_COUNT, TAGLINE } from "@/src/lib/site";
 
 // Expanded TLD lists for user selection
 const POPULAR_TLDS = ["com", "net", "org", "io", "co", "app", "dev", "ai"];
@@ -344,15 +344,18 @@ export default function Home() {
             Compare models ↗
           </a>
           {/*
-            Also hidden below sm, for the same reason as the link above: three
-            pills plus this one overflow a phone. The /mcp page is still
-            reachable from the footer and from search.
+            Visible on every size. On a phone it shrinks to a compact "MCP"
+            pill so the cluster still fits; the full label returns at sm.
+            The "Compare models" link above stays hidden on mobile because it
+            is duplicated inside the connection panel — this pill is not.
           */}
           <Link
             href="/mcp"
-            className="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-md bg-background/80 hover:bg-background/90 transition-colors backdrop-blur-sm border-2 border-border/70"
+            aria-label="MCP server for AI agents"
+            className="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1.5 text-sm rounded-md bg-background/80 hover:bg-background/90 transition-colors backdrop-blur-sm border-2 border-border/70"
           >
-            Prefer MCP?
+            <span className="sm:hidden font-medium">MCP</span>
+            <span className="hidden sm:inline">Prefer MCP?</span>
           </Link>
           <ModelConnection
             open={connectOpen}
@@ -402,12 +405,16 @@ export default function Home() {
             <h1 className="text-xl text-muted-foreground max-w-2xl mx-auto backdrop-blur-[1px] bg-background/30 px-2 py-1 rounded">
               {TAGLINE}
             </h1>
+            <p className="text-base font-medium max-w-2xl mx-auto backdrop-blur-[1px] bg-background/30 px-2 py-1 rounded">
+              Every name is checked against {REGISTERED_DOMAIN_COUNT} registered
+              domains — you only see the ones you can actually register.
+            </p>
             <div className="flex flex-wrap justify-center gap-2 text-sm text-muted-foreground backdrop-blur-[1px] bg-background/30 px-2 py-1 rounded">
               <span>100% Free to Use</span>
               <span>•</span>
               <span>Any LLM Provider</span>
               <span>•</span>
-              <span>Available Domains Only</span>
+              <span>Checked vs {REGISTERED_DOMAIN_COUNT} Records</span>
             </div>
           </header>
 
@@ -1003,8 +1010,9 @@ export default function Home() {
               <li className="flex gap-2 items-start backdrop-blur-[1px] bg-background/30 p-2 rounded">
                 <span className="text-primary">✓</span>
                 <span>
-                  Verified against over 270+ million existing domain records
-                  worldwide to ensure availability
+                  Every suggestion checked against {REGISTERED_DOMAIN_COUNT}{" "}
+                  registered domains worldwide, so you never fall for a name
+                  that is already taken
                 </span>
               </li>
               <li className="flex gap-2 items-start backdrop-blur-[1px] bg-background/30 p-2 rounded">
@@ -1017,9 +1025,12 @@ export default function Home() {
               <li className="flex gap-2 items-start backdrop-blur-[1px] bg-background/30 p-2 rounded">
                 <span className="text-primary">✓</span>
                 <span>
-                  Works inside your AI agent too — connect the MCP server and
-                  Claude or Cursor can check availability without leaving the
-                  chat
+                  Works inside your AI agent too — connect the{" "}
+                  <Link href="/mcp" className="underline underline-offset-2">
+                    MCP server
+                  </Link>{" "}
+                  and Claude or Cursor can check availability without leaving
+                  the chat
                 </span>
               </li>
             </ul>
@@ -1033,6 +1044,19 @@ export default function Home() {
               Find uniquely creative and available domain names for your
               business, startup, or personal project. Bring your own API key —
               we never store it.
+            </p>
+            {/*
+              The navbar's "Prefer MCP?" pill is hidden below sm so four pills
+              do not overflow a phone. This footer link is what makes /mcp
+              reachable on mobile at all — do not remove it without putting
+              that pill back.
+            */}
+            <p className="mt-2">
+              Using an AI agent?{" "}
+              <Link href="/mcp" className="underline underline-offset-2">
+                Connect the MCP server
+              </Link>
+              .
             </p>
             <p className="mt-2">
               Built with ❤️ by{" "}

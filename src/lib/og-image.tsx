@@ -11,8 +11,11 @@ export const ogContentType = "image/png";
  * Renders the social card from the given tagline, so the image can never
  * drift from the copy it is called with. There is no static image checked
  * in — callers pass the tagline from `src/lib/site.ts` and the card follows.
+ *
+ * An optional subtitle renders below the tagline. The homepage uses it for the
+ * "checked against N registered domains" value line; /mcp omits it.
  */
-export async function renderOgImage(tagline: string) {
+export async function renderOgImage(tagline: string, subtitle?: string) {
   const logo = await readFile(
     join(process.cwd(), "public/logo-backgroundless.png"),
   );
@@ -27,8 +30,10 @@ export async function renderOgImage(tagline: string) {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        gap: 40,
-        padding: 80,
+        // Tight enough that a two-line tagline plus the subtitle still fit
+        // inside 630px without the flex children overlapping.
+        gap: 28,
+        padding: 64,
         background: "#ffffff",
         // Every stop is an explicit colour. Satori renders `transparent` as
         // opaque black at zero alpha, which blends to grey rather than
@@ -39,15 +44,15 @@ export async function renderOgImage(tagline: string) {
       }}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={logoSrc} width={220} height={220} alt="" />
+      <img src={logoSrc} width={180} height={180} alt="" />
 
       <div
         style={{
           display: "flex",
-          fontSize: 62,
+          fontSize: 56,
           fontWeight: 700,
           letterSpacing: -2,
-          lineHeight: 1.15,
+          lineHeight: 1.1,
           color: "#111827",
           textAlign: "center",
           maxWidth: 940,
@@ -55,6 +60,22 @@ export async function renderOgImage(tagline: string) {
       >
         {tagline}
       </div>
+
+      {subtitle ? (
+        <div
+          style={{
+            display: "flex",
+            fontSize: 34,
+            fontWeight: 500,
+            lineHeight: 1.2,
+            color: "#374151",
+            textAlign: "center",
+            maxWidth: 900,
+          }}
+        >
+          {subtitle}
+        </div>
+      ) : null}
 
       <div
         style={{
