@@ -405,16 +405,14 @@ export default function Home() {
             <h1 className="text-xl text-muted-foreground max-w-2xl mx-auto backdrop-blur-[1px] bg-background/30 px-2 py-1 rounded">
               {TAGLINE}
             </h1>
-            <p className="text-base font-medium max-w-2xl mx-auto backdrop-blur-[1px] bg-background/30 px-2 py-1 rounded">
-              Every name is checked against {REGISTERED_DOMAIN_COUNT} registered
-              domains — you only see the ones you can actually register.
-            </p>
             <div className="flex flex-wrap justify-center gap-2 text-sm text-muted-foreground backdrop-blur-[1px] bg-background/30 px-2 py-1 rounded">
               <span>100% Free to Use</span>
               <span>•</span>
               <span>Any LLM Provider</span>
               <span>•</span>
-              <span>Checked vs {REGISTERED_DOMAIN_COUNT} Records</span>
+              <span>
+                Checked against {REGISTERED_DOMAIN_COUNT} registered domains
+              </span>
             </div>
           </header>
 
@@ -1039,11 +1037,6 @@ export default function Home() {
           <footer className="mt-16 pt-8 border-t text-center text-sm text-muted-foreground backdrop-blur-[1px] bg-background/30 p-2 rounded">
             <p>
               © {new Date().getFullYear()} dodomains.dev. {TAGLINE}.
-            </p>
-            <p className="mt-2">
-              Find uniquely creative and available domain names for your
-              business, startup, or personal project. Bring your own API key —
-              we never store it.
             </p>
             {/*
               The navbar's "Prefer MCP?" pill is hidden below sm so four pills
