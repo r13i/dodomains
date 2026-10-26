@@ -22,7 +22,7 @@
     "@ai-sdk/openai": "^4.0.32",
     "@ai-sdk/openai-compatible": "^3.0.25",
     "@ai-sdk/xai": "^4.0.30",
-    "@modelcontextprotocol/server": "^2.0.0",
+    "@modelcontextprotocol/server": "^2.3.1",
     "@openrouter/ai-sdk-provider": "^3.0.0",
     "@radix-ui/react-label": "^2.1.2",
     "@radix-ui/react-select": "^2.1.6",
