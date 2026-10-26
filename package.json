@@ -61,6 +61,6 @@
     "shadcn": "^2.4.0-canary.17",
     "tailwindcss": "^4.0.17",
     "typescript": "^5",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.12"
   }
 }
