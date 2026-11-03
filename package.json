@@ -46,7 +46,7 @@
     "react-dom": "^19.0.0",
     "tailwind-merge": "^3.0.2",
     "tw-animate-css": "^1.2.5",
-    "zod": "^4.4.3"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@ai-sdk/provider": "^4.0.6",
@@ -58,7 +58,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.5.22",
-    "shadcn": "^2.4.0-canary.17",
+    "shadcn": "^4.23.0",
     "tailwindcss": "^4.0.17",
     "typescript": "^5",
     "vitest": "^4.1.10"
